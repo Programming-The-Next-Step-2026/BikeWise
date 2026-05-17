@@ -12,7 +12,7 @@ test_that("bikeroute returns a named list with correct elements", {
   skip_if(is.null(route), "OSRM API unavailable")
   expect_type(route, "list")
   expect_named(route,
-    c("coordinates", "timed_coords", "duration_min", "distance_km"))
+               c("coordinates", "timed_coords", "duration_min", "distance_km"))
 })
 
 # Test coordinates data frame
@@ -57,7 +57,7 @@ test_that("Haversine total distance is within 1% of OSRM distance", {
 test_that("timed_coords has correct columns", {
   skip_if(is.null(route), "OSRM API unavailable")
   expect_s3_class(route$timed_coords, "data.frame")
-  expect_named(route$timed_coords, c("time_min", "lon", "lat"))
+  expect_named(route$timed_coords, c("time_min", "dist_km", "lon", "lat"))
 })
 
 # Test timed_coords starts at 0 and ends at duration_min

@@ -2,40 +2,40 @@
 % Please edit documentation in R/bikeroute.R
 \name{bikeroute}
 \alias{bikeroute}
-\title{Get a bike route between two coordinates}
+\title{Plan a cycling route between two coordinates}
 \usage{
 bikeroute(from_lat, from_lon, to_lat, to_lon, interval_min = 3)
 }
 \arguments{
-\item{from_lat}{Latitude of the starting point.}
+\item{from_lat}{Latitude of your starting point (e.g. \code{52.3731}).}
 
-\item{from_lon}{Longitude of the starting point.}
+\item{from_lon}{Longitude of your starting point (e.g. \code{4.8922}).}
 
-\item{to_lat}{Latitude of the destination.}
+\item{to_lat}{Latitude of your destination.}
 
-\item{to_lon}{Longitude of the destination.}
+\item{to_lon}{Longitude of your destination.}
 
-\item{interval_min}{Time interval in minutes between timed position
-snapshots. The start (t = 0) and end (t = total duration) are always
-included regardless of the interval. Defaults to 3.}
+\item{interval_min}{How often (in minutes) to record your estimated position
+along the route. The very start and end of the route are always included.
+Defaults to 3.}
 }
 \value{
-A list with four elements: \code{coordinates} (a data frame of all
-  route waypoints with columns \code{lon} and \code{lat}),
-  \code{timed_coords} (a data frame with columns \code{time_min},
-  \code{lon}, and \code{lat} giving the estimated position at each interval,
-  always including the first and last point), \code{duration_min} (estimated
-  cycling time in minutes), and \code{distance_km} (route length in
-  kilometres).
+A named list with four elements: \code{coordinates} (every waypoint
+  on the route as a data frame with columns \code{lon} and \code{lat}),
+  \code{timed_coords} (your estimated position at each time interval, as a
+  data frame with columns \code{time_min}, \code{dist_km}, \code{lon}, and
+  \code{lat}), \code{duration_min} (estimated cycling time in minutes), and
+  \code{distance_km} (total route length in kilometres).
 }
 \description{
-Get a bike route between two coordinates
+Plan a cycling route between two coordinates
 }
 \details{
-Queries the public OSRM API using the bike profile. Coordinates
-  must be in WGS84 decimal degrees. Timed positions are computed by
-  interpolating along the route geometry assuming constant speed, using the
-  Haversine formula to measure distances between waypoints.
+Uses the public OSRM routing API with the cycling profile to find
+  the route. Coordinates should be standard decimal latitude and longitude
+  (e.g. \code{52.3731, 4.8922}). Estimated positions along the route are
+  calculated by assuming a constant cycling speed and interpolating between
+  waypoints using the Haversine formula.
 }
 \examples{
 bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
