@@ -14,6 +14,8 @@ Description: Plans a cycling route between two locations and checks the weather
     by finding the next dry departure window within a 24-hour forecast.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Depends:
+    R (>= 4.1.0)
 LazyData: true
 RoxygenNote: 7.3.3
 Imports:
