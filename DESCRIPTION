@@ -1,17 +1,26 @@
 Package: BikeWise
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Bike Safe and Dry
 Version: 0.1.0
 Authors@R: c(
     person(
-      "Jane", "Doe",
-      email = "jane@example.com",
+      "Sebastian", "Krebs",
+      email = "sebasti.k24@gmail.com",
       role = c("aut", "cre")
     )
   )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
-License: What license is it under?
+Description: Plans a cycling route between two locations and checks the weather
+    along the way to suggest the safest time to leave. Helps cyclists avoid rain
+    by finding the next dry departure window within a 24-hour forecast.
+License: MIT + file LICENSE
 Encoding: UTF-8
+Depends:
+    R (>= 4.1.0)
 LazyData: true
 RoxygenNote: 7.3.3
+Imports:
+    httr2,
+    googlesheets4
+Suggests: 
+    testthat (>= 3.2.0)
+Config/testthat/edition: 3
