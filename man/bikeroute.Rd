@@ -4,7 +4,7 @@
 \alias{bikeroute}
 \title{Plan a cycling route between two coordinates}
 \usage{
-bikeroute(from_lat, from_lon, to_lat, to_lon, interval_min = 3)
+bikeroute(from_lat, from_lon, to_lat, to_lon)
 }
 \arguments{
 \item{from_lat}{Latitude of your starting point (e.g. \code{52.3731}).}
@@ -14,10 +14,6 @@ bikeroute(from_lat, from_lon, to_lat, to_lon, interval_min = 3)
 \item{to_lat}{Latitude of your destination.}
 
 \item{to_lon}{Longitude of your destination.}
-
-\item{interval_min}{How often (in minutes) to record your estimated position
-along the route. The very start and end of the route are always included.
-Defaults to 3.}
 }
 \value{
 A named list with four elements: \code{coordinates} (every waypoint
@@ -39,6 +35,5 @@ Uses the public OSRM routing API with the cycling profile to find
 }
 \examples{
 bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
-bikeroute(52.3731, 4.8922, 52.3579, 4.8686, interval_min = 5)
 
 }

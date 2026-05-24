@@ -190,7 +190,7 @@ raintracker <- function(timed_df,
               difftime(safe_rows$time[1], abs_time, units = "secs")
             )
             current_start <- current_start + delay_secs
-
+            
           } else {
             # No safe slot in the 24-hour window: give up
             return(list(

@@ -1,0 +1,10 @@
+name: BikeWise
+title:
+username: sebkrbs
+account: sebkrbs
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17405855
+bundleId: 12035258
+url: https://sebkrbs.shinyapps.io/BikeWise/
+version: 1

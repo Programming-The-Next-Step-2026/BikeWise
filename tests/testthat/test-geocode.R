@@ -1,8 +1,8 @@
-# Tests for the geocode function.
+# Tests for the geocode internal helper (lives in save_location.R).
 # All tests require an internet connection and are skipped if Nominatim is unreachable.
 
 # Geocode a well-known address once to avoid repeated API calls
-result_dam <- tryCatch(geocode("Dam Square, Amsterdam"),
+result_dam <- tryCatch(BikeWise:::geocode("Dam Square, Amsterdam"),
                        error = function(e) NULL)
 
 # Test that the result is a named list with lat and lon
@@ -36,5 +36,5 @@ test_that("geocode returns roughly correct coordinates for a known address", {
 # Test that a nonsense address throws a clear, informative error
 test_that("geocode throws an informative error for an unrecognisable address", {
   skip_if(is.null(result_dam), "Nominatim API unavailable")
-  expect_error(geocode("xkzqwpfmvb12345"), "Address not found")
+  expect_error(BikeWise:::geocode("xkzqwpfmvb12345"), "Address not found")
 })

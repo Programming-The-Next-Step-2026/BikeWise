@@ -28,7 +28,6 @@ bikeroute <- function(from_lat, from_lon, to_lat, to_lon) {
   # needs to be small enough so raintracker can find a row near each km mark
   # at ~15 km/h cycling speed, 2 min ~ 500m which is fine for 1km checkpoints
   interval_min <- 2
-
   base_url <- "https://router.project-osrm.org/route/v1/bike"
   coords   <- paste0(from_lon, ",", from_lat, ";", to_lon, ",", to_lat)
 

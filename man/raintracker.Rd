@@ -8,8 +8,8 @@ raintracker(
   timed_df,
   start_time,
   check_interval_km = 1,
-  max_rain_level = "moderate",
-  end_buffer_min = 2
+  threshold = "moderate",
+  end_buffer_min = 5
 )
 }
 \arguments{
@@ -23,13 +23,13 @@ character string (e.g. \code{"2026-05-16 08:00"}).}
 the route. Smaller values are more thorough but use more API calls.
 Defaults to 1 km.}
 
-\item{max_rain_level}{How much rain is too much to cycle in. One of
+\item{threshold}{How much rain is too much to cycle in. One of
 \code{"light"}, \code{"moderate"}, or \code{"heavy"}. Defaults to
 \code{"moderate"}.}
 
 \item{end_buffer_min}{Rain in the final minutes of a ride triggers a note
 rather than delaying your departure — this sets how many of those final
-minutes count as near the end. Defaults to 2.}
+minutes count as near the end. Defaults to 5.}
 }
 \value{
 A named list with four elements: \code{safe_to_go} (TRUE if the
