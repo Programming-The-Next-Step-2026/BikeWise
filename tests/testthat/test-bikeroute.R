@@ -1,11 +1,10 @@
-# Fetch routes once to avoid repeated API calls across all tests.
-# If OSRM is unreachable, both will be NULL and tests will be skipped.
-route  <- tryCatch(bikeroute(52.3731, 4.8922, 52.3579, 4.8686),
-                   error = function(e) NULL)
-route5 <- tryCatch(
-  bikeroute(52.3731, 4.8922, 52.3579, 4.8686, interval_min = 5),
-  error = function(e) NULL
-)
+# Tests for bikeroute().
+# Fetches a real route once to avoid repeated API calls across all tests.
+# All tests are skipped if OSRM is unreachable.
+
+# Fetch route once
+route <- tryCatch(bikeroute(52.3731, 4.8922, 52.3579, 4.8686),
+                  error = function(e) NULL)
 
 # Test return structure
 test_that("bikeroute returns a named list with correct elements", {
@@ -68,21 +67,13 @@ test_that("timed_coords always starts at 0 and ends at duration_min", {
   expect_equal(times[length(times)], route$duration_min)
 })
 
-# Test default interval spacing
-test_that("timed_coords timestamps are evenly spaced at the default interval", {
+# Test that the internal interval is 2 minutes (hardcoded for raintracker resolution)
+test_that("timed_coords timestamps are spaced at the hardcoded 2-minute interval", {
   skip_if(is.null(route), "OSRM API unavailable")
   times <- route$timed_coords$time_min
-  # exclude the final gap, which may be shorter if duration is not a multiple
+  # exclude the final gap, which may be shorter if duration is not a multiple of 2
   diffs <- diff(times[-length(times)])
-  expect_true(all(abs(diffs - 3) < 0.001))
-})
-
-# Test custom interval spacing
-test_that("custom interval_min changes the spacing of timed_coords", {
-  skip_if(is.null(route5), "OSRM API unavailable")
-  times <- route5$timed_coords$time_min
-  diffs <- diff(times[-length(times)])
-  expect_true(all(abs(diffs - 5) < 0.001))
+  expect_true(all(abs(diffs - 2) < 0.001))
 })
 
 # Test error for unroutable coordinates
