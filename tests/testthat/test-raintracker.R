@@ -15,7 +15,7 @@ start_time <- "2026-05-17 08:00"
 make_forecast <- function(mm_h_value) {
   function(lat, lon) {
     times <- seq(
-      as.POSIXct("2026-05-17 00:00", tz = "Europe/Amsterdam"),
+      as.POSIXct("2026-05-17 00:00", tz = Sys.timezone()),
       by = "15 min", length.out = 96
     )
     data.frame(time = times, mm_h = mm_h_value)
@@ -124,9 +124,9 @@ test_that("raintracker includes route_rain_summary when rain is below", {
 # Test that a rainy morning pushes the suggested departure to after the rain
 test_that("raintracker shifts departure when rain exceeds threshold", {
   rainy_until_noon <- function(lat, lon) {
-    times  <- seq(as.POSIXct("2026-05-17 00:00", tz = "Europe/Amsterdam"),
+    times  <- seq(as.POSIXct("2026-05-17 00:00", tz = Sys.timezone()),
                   by = "15 min", length.out = 96)
-    cutoff <- as.POSIXct("2026-05-17 12:00", tz = "Europe/Amsterdam")
+    cutoff <- as.POSIXct("2026-05-17 12:00", tz = Sys.timezone())
     data.frame(time = times, mm_h = ifelse(times < cutoff, 15, 0))
   }
   local_mocked_bindings(
@@ -136,7 +136,7 @@ test_that("raintracker shifts departure when rain exceeds threshold", {
   result <- raintracker(timed_df, start_time)
   expect_true(result$safe_to_go)
   expect_gt(result$suggested_departure,
-            as.POSIXct(start_time, tz = "Europe/Amsterdam"))
+            as.POSIXct(start_time, tz = Sys.timezone()))
 })
 
 # Test that all-day rain returns no usable departure time
@@ -155,7 +155,7 @@ test_that("end buffer rain produces a note but does not shift departure", {
   call_n <- 0L
   last_only_rain <- function(lat, lon) {
     call_n <<- call_n + 1L
-    times <- seq(as.POSIXct("2026-05-17 00:00", tz = "Europe/Amsterdam"),
+    times <- seq(as.POSIXct("2026-05-17 00:00", tz = Sys.timezone()),
                  by = "15 min", length.out = 96)
     # Only the last checkpoint (the finish) gets rain
     data.frame(time = times, mm_h = if (call_n == 4L) 15 else 0)
@@ -169,5 +169,5 @@ test_that("end buffer rain produces a note but does not shift departure", {
   expect_true(result$safe_to_go)
   expect_false(is.null(result$end_of_route_note))
   expect_equal(result$suggested_departure,
-               as.POSIXct(start_time, tz = "Europe/Amsterdam"))
+               as.POSIXct(start_time, tz = Sys.timezone()))
 })

@@ -4,7 +4,7 @@
 \alias{get_locations}
 \title{Get saved locations for a user}
 \usage{
-get_locations(user, label = NULL)
+get_locations(user, label = NULL, example = FALSE)
 }
 \arguments{
 \item{user}{A username string identifying the user.}
@@ -12,6 +12,9 @@ get_locations(user, label = NULL)
 \item{label}{Optional. If provided, returns only the coordinates for that
 label as a named list with \code{lat} and \code{lon}. If omitted, returns
 all saved locations as a data frame.}
+
+\item{example}{If \code{TRUE}, reads from a local CSV file instead of
+Google Sheets. Used automatically by \code{run_example()}.}
 }
 \value{
 When \code{label} is omitted: a data frame with columns

@@ -22,10 +22,12 @@ Imports:
     httr2,
     googlesheets4,
     digest,
+    ggplot2,
     shiny,
-    leaflet
+    tools
 Suggests:
     knitr,
+    leaflet,
     rmarkdown,
     testthat (>= 3.2.0),
     withr

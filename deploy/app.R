@@ -198,8 +198,7 @@ server <- function(input, output, session) {
       error = function(e) {
         data.frame(
           user = character(), label = character(), address = character(),
-          lat  = numeric(),   lon   = numeric(),
-          stringsAsFactors = FALSE
+          lat  = numeric(),   lon   = numeric()
         )
       }
     )

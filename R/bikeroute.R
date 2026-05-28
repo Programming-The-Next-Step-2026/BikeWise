@@ -95,11 +95,13 @@ bikeroute <- function(from_lat, from_lon, to_lat, to_lon) {
   dist_at_t <- timestamps * (cum_km[n] / duration_min)
 
   # Linearly interpolate lon and lat at each target distance using approx()
+  # Deduplicate cum_km first — OSRM can return consecutive identical waypoints
+  keep <- !duplicated(cum_km)
   timed_df <- data.frame(
     time_min = timestamps,
     dist_km  = dist_at_t,
-    lon      = approx(cum_km, coords_df$lon, xout = dist_at_t)$y,
-    lat      = approx(cum_km, coords_df$lat, xout = dist_at_t)$y
+    lon      = approx(cum_km[keep], coords_df$lon[keep], xout = dist_at_t)$y,
+    lat      = approx(cum_km[keep], coords_df$lat[keep], xout = dist_at_t)$y
   )
 
   # Save coordinates, timed positions, duration and distance in list

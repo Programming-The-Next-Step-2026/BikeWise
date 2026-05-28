@@ -4,6 +4,8 @@
 #' @param label Optional. If provided, returns only the coordinates for that
 #'   label as a named list with \code{lat} and \code{lon}. If omitted, returns
 #'   all saved locations as a data frame.
+#' @param example If \code{TRUE}, reads from a local CSV file instead of
+#'   Google Sheets. Used automatically by \code{run_example()}.
 #'
 #' @return When \code{label} is omitted: a data frame with columns
 #'   \code{user}, \code{label}, \code{address}, \code{lat}, \code{lon}, and
@@ -21,10 +23,16 @@
 #'
 #' @importFrom googlesheets4 read_sheet
 #' @export
-get_locations <- function(user, label = NULL) {
+get_locations <- function(user, label = NULL, example = FALSE) {
 
-  # read full locations sheet and filter to this user
-  data   <- read_sheet(sheet_id(), sheet = "locations")
+  # read from local CSV or Google Sheet depending on mode
+  data <- if (example) {
+    load_local_locations()
+    } else {
+    read_sheet(sheet_id(), sheet = "locations")
+    }
+
+  # filter to user's rows
   result <- data[data$user == user, ]
 
   # no label provided: return all locations as a data frame

@@ -4,12 +4,15 @@
 \alias{authenticate_user}
 \title{Log in or register a user}
 \usage{
-authenticate_user(username, password)
+authenticate_user(username, password, example = FALSE)
 }
 \arguments{
 \item{username}{A username string.}
 
 \item{password}{A plain-text password.}
+
+\item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
+Google Sheets. Used automatically by \code{run_example()}.}
 }
 \value{
 One of three character strings: \code{"created"} (new account made),

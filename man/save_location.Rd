@@ -4,7 +4,7 @@
 \alias{save_location}
 \title{Save a location for a user}
 \usage{
-save_location(user, label, address, display_name = NULL)
+save_location(user, label, address, display_name = NULL, example = FALSE)
 }
 \arguments{
 \item{user}{A username string identifying the user.}
@@ -18,6 +18,9 @@ Geocoded automatically — no coordinates needed.}
 
 \item{display_name}{Optional display name for the location card. Only used
 when \code{label} is \code{"custom1"} or \code{"custom2"}.}
+
+\item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
+Google Sheets. Used automatically by \code{run_example()}.}
 }
 \value{
 The saved coordinates as a named list with \code{lat} and
@@ -28,10 +31,10 @@ Save a location for a user
 }
 \details{
 Geocodes the address and writes the result to the BikeWise Google
-  Sheet. If a location with the same label already exists for this user, it
-  is overwritten. Requires the environment variable
-  \code{BIKEWISE_SHEET_ID} to be set and a valid Google account
-  authenticated via \code{googlesheets4::gs4_auth()}.
+  Sheet, or to a local CSV when \code{example = TRUE}. If a location with
+  the same label already exists for this user, it is overwritten. The
+  Google Sheets backend requires \code{BIKEWISE_SHEET_ID} to be set and a
+  valid Google account authenticated via \code{googlesheets4::gs4_auth()}.
 }
 \examples{
 \dontrun{

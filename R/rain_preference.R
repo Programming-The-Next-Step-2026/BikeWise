@@ -4,6 +4,8 @@
 #' @param preference If provided, updates the stored preference to this value.
 #'   One of \code{"none"}, \code{"light"}, \code{"moderate"}, or
 #'   \code{"heavy"}. If omitted, the current preference is returned.
+#' @param example If \code{TRUE}, reads and writes a local CSV file instead of
+#'   Google Sheets. Used automatically by \code{run_example()}.
 #'
 #' @return The current preference as a character string when called without
 #'   \code{preference}. Called with \code{preference}, updates the value and
@@ -11,18 +13,35 @@
 #'
 #' @importFrom googlesheets4 read_sheet write_sheet
 #' @export
-rain_preference <- function(username, preference = NULL) {
-  users <- read_sheet(sheet_id(), sheet = "users")
+rain_preference <- function(username, preference = NULL, example = FALSE) {
 
-  if (is.null(preference)) {
+  if (example) {
 
-    # if no preference is provided, must be in sheet
-    users$rain_preference[users$username == username]
+    users <- load_local_users()
+
+    if (is.null(preference)) {
+      # return current preference
+      users$rain_preference[users$username == username]
+    } else {
+      # update preference and write back to CSV
+      users$rain_preference[users$username == username] <- preference
+      write.csv(users, local_users_path(), row.names = FALSE)
+      invisible(NULL)
+    }
 
   } else {
 
-    # if preference is provided, adopt
-    users$rain_preference[users$username == username] <- preference
-    write_sheet(users, ss = sheet_id(), sheet = "users")
+    users <- read_sheet(sheet_id(), sheet = "users")
+
+    if (is.null(preference)) {
+      # return current preference
+      users$rain_preference[users$username == username]
+    } else {
+      # update preference and write back to sheet
+      users$rain_preference[users$username == username] <- preference
+      write_sheet(users, ss = sheet_id(), sheet = "users")
+      invisible(NULL)
+    }
+
   }
 }

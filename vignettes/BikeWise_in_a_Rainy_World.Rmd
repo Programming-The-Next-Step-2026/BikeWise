@@ -1,5 +1,7 @@
 ---
-title: "BikeWise: Rain-Aware Cycling Route Planning"
+title: "BikeWise: How to Avoid the Rain"
+author: "SebKrbs"
+date: "May 31st, 2026"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BikeWise: Rain-Aware Cycling Route Planning}

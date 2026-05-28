@@ -4,7 +4,7 @@
 \alias{rain_preference}
 \title{Get or set the rain preference for a user}
 \usage{
-rain_preference(username, preference = NULL)
+rain_preference(username, preference = NULL, example = FALSE)
 }
 \arguments{
 \item{username}{A username string.}
@@ -12,6 +12,9 @@ rain_preference(username, preference = NULL)
 \item{preference}{If provided, updates the stored preference to this value.
 One of \code{"none"}, \code{"light"}, \code{"moderate"}, or
 \code{"heavy"}. If omitted, the current preference is returned.}
+
+\item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
+Google Sheets. Used automatically by \code{run_example()}.}
 }
 \value{
 The current preference as a character string when called without
