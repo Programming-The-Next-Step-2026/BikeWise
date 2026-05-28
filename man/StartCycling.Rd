@@ -10,9 +10,10 @@ StartCycling()
 Called for its side effect; returns \code{NULL} invisibly.
 }
 \description{
-Launches the BikeWise Shiny app. Currently uses a local CSV as the data
-backend (\code{example = TRUE}). A production backend (Supabase) will
-replace this in a future version.
+Opens the BikeWise app in your default browser. User accounts and saved
+locations are stored in local CSV files on your machine — no Google account
+is required. An internet connection is needed for the weather forecast and
+route planning APIs.
 }
 \examples{
 \dontrun{

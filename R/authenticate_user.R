@@ -13,6 +13,11 @@
 #'   \code{"authenticated"} (existing user, correct password), or
 #'   \code{"wrong_password"} (existing user, wrong password).
 #'
+#' @examples
+#' \dontrun{
+#' authenticate_user("alice", "secret")
+#' }
+#'
 #' @importFrom googlesheets4 read_sheet write_sheet
 #' @importFrom digest digest
 #' @export

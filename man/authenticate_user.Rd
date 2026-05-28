@@ -24,3 +24,9 @@ Checks whether the username exists. If not, creates a new account. If so,
 verifies the password. Returns a string describing the outcome so the caller
 can respond appropriately.
 }
+\examples{
+\dontrun{
+authenticate_user("alice", "secret")
+}
+
+}

@@ -24,3 +24,10 @@ The current preference as a character string when called without
 \description{
 Get or set the rain preference for a user
 }
+\examples{
+\dontrun{
+rain_preference("alice")
+rain_preference("alice", "moderate")
+}
+
+}

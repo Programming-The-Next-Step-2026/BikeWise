@@ -10,6 +10,13 @@
 #'   line marking the user's tolerance threshold. Returns a blank plot when
 #'   \code{route_rain_summary} is \code{NULL}.
 #'
+#' @examples
+#' \dontrun{
+#' route <- bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
+#' result <- raintracker(route$timed_coords, Sys.time())
+#' plot_rain(result$route_rain_summary)
+#' }
+#'
 #' @importFrom ggplot2 ggplot aes geom_area geom_line geom_hline labs
 #' @importFrom ggplot2 scale_y_continuous coord_cartesian theme_classic
 #' @importFrom ggplot2 theme_void

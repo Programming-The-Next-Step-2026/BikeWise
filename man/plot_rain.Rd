@@ -22,3 +22,11 @@ A ggplot object showing rain intensity over distance, with a red
 \description{
 Plot rain intensity along a route
 }
+\examples{
+\dontrun{
+route <- bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
+result <- raintracker(route$timed_coords, Sys.time())
+plot_rain(result$route_rain_summary)
+}
+
+}

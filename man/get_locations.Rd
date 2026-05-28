@@ -31,6 +31,7 @@ Get saved locations for a user
 googlesheets4::gs4_auth()
 get_locations("alice")
 home <- get_locations("alice", "home")
+work <- get_locations("alice", "work")
 bikeroute(home$lat, home$lon, work$lat, work$lon)
 }
 

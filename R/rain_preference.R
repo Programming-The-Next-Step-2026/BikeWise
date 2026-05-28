@@ -11,6 +11,12 @@
 #'   \code{preference}. Called with \code{preference}, updates the value and
 #'   returns \code{NULL} invisibly.
 #'
+#' @examples
+#' \dontrun{
+#' rain_preference("alice")
+#' rain_preference("alice", "moderate")
+#' }
+#'
 #' @importFrom googlesheets4 read_sheet write_sheet
 #' @export
 rain_preference <- function(username, preference = NULL, example = FALSE) {
