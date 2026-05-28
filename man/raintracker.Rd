@@ -8,8 +8,7 @@ raintracker(
   timed_df,
   start_time,
   check_interval_km = 1,
-  threshold = "moderate",
-  end_buffer_min = 5
+  threshold = "moderate"
 )
 }
 \arguments{
@@ -26,20 +25,13 @@ Defaults to 1 km.}
 \item{threshold}{How much rain is too much to cycle in. One of
 \code{"light"}, \code{"moderate"}, or \code{"heavy"}. Defaults to
 \code{"moderate"}.}
-
-\item{end_buffer_min}{Rain in the final minutes of a ride triggers a note
-rather than delaying your departure — this sets how many of those final
-minutes count as near the end. Defaults to 5.}
 }
 \value{
-A named list with four elements: \code{safe_to_go} (TRUE if the
+A named list with three elements: \code{safe_to_go} (TRUE if the
   route looks rain-free at the suggested departure time),
   \code{suggested_departure} (when to leave as a POSIXct, or NA if no dry
-  window was found today), \code{end_of_route_note} (a named list with
-  \code{level} (rain severity string) and \code{mins_from_end} (numeric,
-  minutes from the route end) if rain is expected near the finish, otherwise
-  NULL), and \code{route_rain_summary} (a data frame with columns
-  \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
+  window was found today), and \code{route_rain_summary} (a data frame with
+  columns \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
   \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, only
   included when \code{safe_to_go} is TRUE and at least some rain was
   detected below the threshold).

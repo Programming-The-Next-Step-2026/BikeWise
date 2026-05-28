@@ -58,18 +58,11 @@ fetch_rain_forecast <- function(lat, lon) {
 #' @param threshold How much rain is too much to cycle in. One of
 #'   \code{"light"}, \code{"moderate"}, or \code{"heavy"}. Defaults to
 #'   \code{"moderate"}.
-#' @param end_buffer_min Rain in the final minutes of a ride triggers a note
-#'   rather than delaying your departure — this sets how many of those final
-#'   minutes count as near the end. Defaults to 5.
-#'
-#' @return A named list with four elements: \code{safe_to_go} (TRUE if the
+#' @return A named list with three elements: \code{safe_to_go} (TRUE if the
 #'   route looks rain-free at the suggested departure time),
 #'   \code{suggested_departure} (when to leave as a POSIXct, or NA if no dry
-#'   window was found today), \code{end_of_route_note} (a named list with
-#'   \code{level} (rain severity string) and \code{mins_from_end} (numeric,
-#'   minutes from the route end) if rain is expected near the finish, otherwise
-#'   NULL), and \code{route_rain_summary} (a data frame with columns
-#'   \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
+#'   window was found today), and \code{route_rain_summary} (a data frame with
+#'   columns \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
 #'   \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, only
 #'   included when \code{safe_to_go} is TRUE and at least some rain was
 #'   detected below the threshold).
@@ -94,8 +87,7 @@ fetch_rain_forecast <- function(lat, lon) {
 raintracker <- function(timed_df,
                         start_time,
                         check_interval_km = 1,
-                        threshold = "moderate",
-                        end_buffer_min = 5) {
+                        threshold = "moderate") {
 
   if (!inherits(start_time, "POSIXct")) {
     start_time <- as.POSIXct(start_time, tz = Sys.timezone())
@@ -127,8 +119,6 @@ raintracker <- function(timed_df,
   repeat {
     # Reset all rain indeces
     severity_log <- vector("list", nrow(checkpoints))
-    end_note     <- NULL
-    end_level_max <- "none"
     rain_found   <- FALSE
 
     # Check rain at checkpoint at its appropriate time
@@ -136,9 +126,6 @@ raintracker <- function(timed_df,
       # Choose checkpoint location and time
       cp         <- checkpoints[i, ]
       abs_time   <- current_start + cp$time_min * 60
-
-      # Check if rain is clos enough to route end that it's within buffer
-      is_end_buf <- (max_time - cp$time_min) <= end_buffer_min
 
       forecast <- forecasts[[i]]
 
@@ -163,51 +150,32 @@ raintracker <- function(timed_df,
 
       # Check whether rain is acceptable to the user, if not find new timeslot
       if (exceeds_threshold(level, threshold)) {
+        # Too rainy mid-route: find when rain clears at this location
+        rain_found <- TRUE
+        future    <- forecast[forecast$time >= abs_time, ]
+        safe_rows <- future[!sapply(
+          future$mm_h,
+          function(x) exceeds_threshold(classify_rain(x), threshold)
+        ), ]
 
-        # If within end of the route, provides warning only
-        if (is_end_buf) {
-          # Make sure to save the worst rain level within that buffer, not any
-          if (exceeds_threshold(level, end_level_max) &&
-              level != end_level_max) {
-            end_level_max <- level
-            mins_from_end <- round(max_time - cp$time_min, 1)
-
-            # save note indicating the worst rain and time within buffer zone
-            end_note <- list(
-              level         = level,
-              mins_from_end = mins_from_end
-            )
-          }
+        # Adjust time if needed
+        if (nrow(safe_rows) > 0) {
+          # Shift departure by the delay until rain clears
+          delay_secs    <- as.numeric(
+            difftime(safe_rows$time[1], abs_time, units = "secs")
+          )
+          current_start <- current_start + delay_secs
 
         } else {
-          # Too rainy mid-route: find when rain clears at this location
-          rain_found <- TRUE
-          future    <- forecast[forecast$time >= abs_time, ]
-          safe_rows <- future[!sapply(
-            future$mm_h,
-            function(x) exceeds_threshold(classify_rain(x), threshold)
-          ), ]
-
-          # Adjust time if needed
-          if (nrow(safe_rows) > 0) {
-            # Shift departure by the delay until rain clears
-            delay_secs    <- as.numeric(
-              difftime(safe_rows$time[1], abs_time, units = "secs")
-            )
-            current_start <- current_start + delay_secs
-
-          } else {
-            # No safe slot in the 24-hour window: give up
-            return(list(
-              safe_to_go          = FALSE,
-              suggested_departure = NA,
-              end_of_route_note   = NULL,
-              route_rain_summary  = NULL
-            ))
-          }
-          # Restart checkpoint loop with updated departure time
-          break
+          # No safe slot in the 24-hour window: give up
+          return(list(
+            safe_to_go          = FALSE,
+            suggested_departure = NA,
+            route_rain_summary  = NULL
+          ))
         }
+        # Restart checkpoint loop with updated departure time
+        break
       }
     }
 
@@ -218,7 +186,6 @@ raintracker <- function(timed_df,
       return(list(
         safe_to_go          = TRUE,
         suggested_departure = current_start,
-        end_of_route_note   = end_note,
         route_rain_summary  = if (has_rain) summary_df else NULL
       ))
     }

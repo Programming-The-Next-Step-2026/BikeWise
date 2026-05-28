@@ -1,33 +1,8 @@
 PRESET_TITLES <- c(
   home      = "Home",
   work      = "Work",
-  education = "Education",
-  friends   = "Friends",
-  sports    = "Sports",
-  music     = "Music"
-)
-
-LABELS <- c("home", "work", "education", "friends", "sports", "music",
-            "custom1", "custom2")
-
-LABEL_ICONS <- c(
-  home      = "home",
-  work      = "briefcase",
-  education = "graduation-cap",
-  friends   = "users",
-  sports    = "running",
-  music     = "music",
-  custom1   = "pencil",
-  custom2   = "pencil"
-)
-
-LABEL_TITLES <- c(
-  home      = "Home",
-  work      = "Work",
-  education = "Education",
-  friends   = "Friends",
-  sports    = "Sports",
-  music     = "Music",
+  school    = "School",
+  gym       = "Gym",
   custom1   = "Custom 1",
   custom2   = "Custom 2"
 )

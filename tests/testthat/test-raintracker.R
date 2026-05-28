@@ -91,7 +91,7 @@ test_that("raintracker returns a named list with the correct elements", {
   result <- raintracker(timed_df, start_time)
   expect_type(result, "list")
   expected_names <- c("safe_to_go", "suggested_departure",
-                      "end_of_route_note", "route_rain_summary")
+                      "route_rain_summary")
   expect_true(all(expected_names %in% names(result)))
 })
 
@@ -104,7 +104,6 @@ test_that("raintracker returns safe_to_go TRUE on a fully dry route", {
   result <- raintracker(timed_df, start_time)
   expect_true(result$safe_to_go)
   expect_s3_class(result$suggested_departure, "POSIXct")
-  expect_null(result$end_of_route_note)
   expect_null(result$route_rain_summary)
 })
 
@@ -118,7 +117,8 @@ test_that("raintracker includes route_rain_summary when rain is below", {
   expect_true(result$safe_to_go)
   expect_s3_class(result$route_rain_summary, "data.frame")
   expect_named(result$route_rain_summary,
-               c("time_min", "lon", "lat", "rain_mm_h", "rain_level"))
+               c("time_min", "dist_km", "lon", "lat", "rain_mm_h",
+                 "rain_level"))
 })
 
 # Test that a rainy morning pushes the suggested departure to after the rain
@@ -148,26 +148,4 @@ test_that("raintracker returns NA departure when no dry window exists", {
   result <- raintracker(timed_df, start_time)
   expect_false(result$safe_to_go)
   expect_true(is.na(result$suggested_departure))
-})
-
-# Test that rain only at the very end of the route gives a warning, not a delay
-test_that("end buffer rain produces a note but does not shift departure", {
-  call_n <- 0L
-  last_only_rain <- function(lat, lon) {
-    call_n <<- call_n + 1L
-    times <- seq(as.POSIXct("2026-05-17 00:00", tz = Sys.timezone()),
-                 by = "15 min", length.out = 96)
-    # Only the last checkpoint (the finish) gets rain
-    data.frame(time = times, mm_h = if (call_n == 4L) 15 else 0)
-  }
-  local_mocked_bindings(
-    fetch_rain_forecast = last_only_rain,
-    .package = "BikeWise"
-  )
-  # With end_buffer_min = 5, checkpoints at 10 and 15 min are near the end
-  result <- raintracker(timed_df, start_time, end_buffer_min = 5)
-  expect_true(result$safe_to_go)
-  expect_false(is.null(result$end_of_route_note))
-  expect_equal(result$suggested_departure,
-               as.POSIXct(start_time, tz = Sys.timezone()))
 })

@@ -5,11 +5,10 @@
 #' @param to_lat Latitude of your destination.
 #' @param to_lon Longitude of your destination.
 #'
-#' @return A named list with four elements: \code{coordinates} (every waypoint
-#'   on the route as a data frame with columns \code{lon} and \code{lat}),
-#'   \code{timed_coords} (your estimated position at each time interval, as a
-#'   data frame with columns \code{time_min}, \code{dist_km}, \code{lon}, and
-#'   \code{lat}), \code{duration_min} (estimated cycling time in minutes), and
+#' @return A named list with three elements: \code{timed_coords} (your
+#'   estimated position at each time interval, as a data frame with columns
+#'   \code{time_min}, \code{dist_km}, \code{lon}, and \code{lat}),
+#'   \code{duration_min} (estimated cycling time in minutes), and
 #'   \code{distance_km} (total route length in kilometres).
 #'
 #' @details Uses the public OSRM routing API with the cycling profile to find
@@ -104,9 +103,7 @@ bikeroute <- function(from_lat, from_lon, to_lat, to_lon) {
     lat      = approx(cum_km[keep], coords_df$lat[keep], xout = dist_at_t)$y
   )
 
-  # Save coordinates, timed positions, duration and distance in list
   list(
-    coordinates  = coords_df,
     timed_coords = timed_df,
     duration_min = duration_min,
     distance_km  = distance_km

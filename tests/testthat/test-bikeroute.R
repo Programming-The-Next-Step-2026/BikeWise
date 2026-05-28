@@ -10,23 +10,7 @@ route <- tryCatch(bikeroute(52.3731, 4.8922, 52.3579, 4.8686),
 test_that("bikeroute returns a named list with correct elements", {
   skip_if(is.null(route), "OSRM API unavailable")
   expect_type(route, "list")
-  expect_named(route,
-               c("coordinates", "timed_coords", "duration_min", "distance_km"))
-})
-
-# Test coordinates data frame
-test_that("coordinates is a data frame with lon and lat columns", {
-  skip_if(is.null(route), "OSRM API unavailable")
-  expect_s3_class(route$coordinates, "data.frame")
-  expect_named(route$coordinates, c("lon", "lat"))
-  expect_gt(nrow(route$coordinates), 1)
-})
-
-# Test coordinates fall within valid WGS84 bounds
-test_that("coordinates fall within valid WGS84 bounds", {
-  skip_if(is.null(route), "OSRM API unavailable")
-  expect_true(all(route$coordinates$lat >= -90  & route$coordinates$lat <= 90))
-  expect_true(all(route$coordinates$lon >= -180 & route$coordinates$lon <= 180))
+  expect_named(route, c("timed_coords", "duration_min", "distance_km"))
 })
 
 # Test duration and distance are positive
@@ -34,22 +18,6 @@ test_that("duration and distance are positive numbers", {
   skip_if(is.null(route), "OSRM API unavailable")
   expect_gt(route$duration_min, 0)
   expect_gt(route$distance_km, 0)
-})
-
-# Test Haversine distance aligns with OSRM distance
-test_that("Haversine total distance is within 1% of OSRM distance", {
-  skip_if(is.null(route), "OSRM API unavailable")
-  coords       <- route$coordinates
-  n            <- nrow(coords)
-  lat_rad      <- coords$lat * pi / 180
-  lon_rad      <- coords$lon * pi / 180
-  phi1         <- lat_rad[-n]
-  phi2         <- lat_rad[-1]
-  dphi         <- phi2 - phi1
-  dlam         <- lon_rad[-1] - lon_rad[-n]
-  a            <- sin(dphi / 2)^2 + cos(phi1) * cos(phi2) * sin(dlam / 2)^2
-  haversine_km <- sum(c(0, 2 * 6371 * asin(sqrt(a))))
-  expect_lt(abs(haversine_km - route$distance_km) / route$distance_km, 0.01)
 })
 
 # Test timed_coords structure and column names

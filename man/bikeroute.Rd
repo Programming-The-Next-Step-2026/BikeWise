@@ -16,11 +16,10 @@ bikeroute(from_lat, from_lon, to_lat, to_lon)
 \item{to_lon}{Longitude of your destination.}
 }
 \value{
-A named list with four elements: \code{coordinates} (every waypoint
-  on the route as a data frame with columns \code{lon} and \code{lat}),
-  \code{timed_coords} (your estimated position at each time interval, as a
-  data frame with columns \code{time_min}, \code{dist_km}, \code{lon}, and
-  \code{lat}), \code{duration_min} (estimated cycling time in minutes), and
+A named list with three elements: \code{timed_coords} (your
+  estimated position at each time interval, as a data frame with columns
+  \code{time_min}, \code{dist_km}, \code{lon}, and \code{lat}),
+  \code{duration_min} (estimated cycling time in minutes), and
   \code{distance_km} (total route length in kilometres).
 }
 \description{
