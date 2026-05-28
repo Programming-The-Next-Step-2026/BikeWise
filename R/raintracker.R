@@ -1,11 +1,11 @@
 # Convert mm/h to named rain severity using Buienradar thresholds
 #' @noRd
 classify_rain <- function(mm_h) {
-  if (mm_h < 0.1) {
+  if (mm_h < RAIN_THRESHOLDS[["none"]]) {
     "none"
-  } else if (mm_h < 2.5) {
+  } else if (mm_h < RAIN_THRESHOLDS[["light"]]) {
     "light"
-  } else if (mm_h <= 10) {
+  } else if (mm_h <= RAIN_THRESHOLDS[["moderate"]]) {
     "moderate"
   } else {
     "heavy"
@@ -65,12 +65,14 @@ fetch_rain_forecast <- function(lat, lon) {
 #' @return A named list with four elements: \code{safe_to_go} (TRUE if the
 #'   route looks rain-free at the suggested departure time),
 #'   \code{suggested_departure} (when to leave as a POSIXct, or NA if no dry
-#'   window was found today), \code{end_of_route_note} (a plain-text warning
-#'   if heavy rain is expected near the finish, otherwise NULL), and
-#'   \code{route_rain_summary} (a data frame of rain readings at each
-#'   checkpoint — only included when \code{safe_to_go} is TRUE and at least
-#'   some rain was detected below the threshold). A \code{note} field is added
-#'   when the result is approximate.
+#'   window was found today), \code{end_of_route_note} (a named list with
+#'   \code{level} (rain severity string) and \code{mins_from_end} (numeric,
+#'   minutes from the route end) if rain is expected near the finish, otherwise
+#'   NULL), and \code{route_rain_summary} (a data frame with columns
+#'   \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
+#'   \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, only
+#'   included when \code{safe_to_go} is TRUE and at least some rain was
+#'   detected below the threshold).
 #'
 #' @details Checks the weather at regular intervals along your route using the
 #'   free Open-Meteo API (no key required), which provides 15-minute
@@ -151,6 +153,7 @@ raintracker <- function(timed_df,
       # Store result for severity summary (full dataframe created later)
       severity_log[[i]] <- data.frame(
         time_min   = cp$time_min,
+        dist_km    = cp$dist_km,
         lon        = cp$lon,
         lat        = cp$lat,
         rain_mm_h  = round(mm_h, 2),
@@ -163,14 +166,15 @@ raintracker <- function(timed_df,
         # If within end of the route, provides warning only
         if (is_end_buf) {
           # Make sure to save the worst rain level within that buffer, not any
-          if (exceeds_threshold(level, end_level_max) && level != end_level_max) {
+          if (exceeds_threshold(level, end_level_max) &&
+              level != end_level_max) {
             end_level_max <- level
             mins_from_end <- round(max_time - cp$time_min, 1)
 
             # save note indicating the worst rain and time within buffer zone
-            end_note <- paste0(
-              "Expect ", level, " rain in the last ",
-              mins_from_end, " min of the route."
+            end_note <- list(
+              level         = level,
+              mins_from_end = mins_from_end
             )
           }
 
@@ -197,8 +201,7 @@ raintracker <- function(timed_df,
               safe_to_go          = FALSE,
               suggested_departure = NA,
               end_of_route_note   = NULL,
-              route_rain_summary  = NULL,
-              note = "No rain-free window found in today's forecast."
+              route_rain_summary  = NULL
             ))
           }
           # Restart checkpoint loop with updated departure time

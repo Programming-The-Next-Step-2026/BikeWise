@@ -15,7 +15,7 @@ ui <- fluidPage(
 # how data is loaded, and which screen to show next.
 
 
-# ── UI helpers ────────────────────────────────────────────────────────────────
+## server helper functions, determining the ui per screen
 # login_ui helper to determine the login screen
 login_ui <- function() {
 
@@ -38,7 +38,7 @@ login_ui <- function() {
 )
 }
 
-# rain_tolerance_ui to determine the rain preference screen
+# rain_tolerance_ui to determine the rain preferance screen screen
 rain_tolerance_ui <- function() {
 
   # use fluidrow to organise the UI
@@ -62,14 +62,17 @@ rain_tolerance_ui <- function() {
 
     fluidRow(actionButton("tol_heavy",
                           tagList(icon("cloud-showers-heavy"), " I cycle in any weather"),
-                          width = "200px"))
+                          width = "200px")),
+
+
+
     )
   )
 }
 
 # pick_start_ui to determine where to start your ride
 pick_start_ui <- function(saved_labels) { # saved labels is vector showing saved locations
-
+  
   # use taglist as container, as fluidRow messes with Layout
   tagList(
     fluidRow(column(12,
@@ -89,8 +92,8 @@ pick_start_ui <- function(saved_labels) { # saved labels is vector showing saved
 
     # create location cards with spacing between rows
     splitLayout(
-      actionButton("from_home",
-                    tagList(icon("home"), " Home"),
+      actionButton("from_home", 
+                    tagList(icon("home"), " Home"), 
                     width = "100%",
 
                     # change color to green if in saved_labels
@@ -268,7 +271,7 @@ pick_end_ui <- function(saved_labels) {
                    })
     ),
     br(),
-    fluidRow(column(12,
+    fluidRow(column(12, 
                     align = "center",
                     actionButton("back_btn", tagList(icon("arrow-left"), " Back"))
                     ))
@@ -278,7 +281,7 @@ pick_end_ui <- function(saved_labels) {
 
 
 # route_ui to show the result of the bike route and rain forecast
-route_ui <- function(route_data) {
+route_ui <- function(route_data, rain_result, tolerance) {
 
   # setup layout
   tagList(
@@ -324,7 +327,7 @@ route_ui <- function(route_data) {
 
 
 # settings_ui so that the user can update their preferences and locations
-settings_ui <- function(saved_labels) {
+settings_ui <- function(saved_labels, current_tolerance){
   tagList(
     fluidRow(column(12, align = "center",
     h2("Settings"),
@@ -471,11 +474,15 @@ server <- function(input, output, session) {
   previous_page    <- reactiveVal(NULL)
   tolerance_version <- reactiveVal(0)
 
+  # fetch saved locations for the current user
+  saved_locations <- reactive({
+    get_locations(current_user(), example = TRUE)
+  })
 
 
   # reads current_page() and draws matching screen
   output$page <- renderUI({
-
+    
     # change screen based on current_page()
     switch(current_page(),
            login = login_ui(),
@@ -483,23 +490,24 @@ server <- function(input, output, session) {
            pick_start = pick_start_ui(get_locations(current_user(), example = TRUE)$label), # fetch fresh locations to reflect newly saved ones
            pick_end   = pick_end_ui(get_locations(current_user(), example = TRUE)$label),   # same here, ensures green cards show up after saving on pick_start
            settings = settings_ui(
-             get_locations(current_user(), example = TRUE)$label
+            get_locations(current_user(), example = TRUE)$label,
+            tolerance()
            ),
-           route = route_ui(route_data()),
+           route = route_ui(route_data(), rain_result(), tolerance()),
            h2("Unknown page")
     )
     })
 
 
-  # handle login button
+  # consider changing screen based on login_btn
   observeEvent(input$login_btn, {
 
     # store if user is authenticated based on provided credentials
-    result <- authenticate_user(input$username,
-                                input$password,
+    result <- authenticate_user(input$username, 
+                                input$password, 
                                 example = TRUE)
-
-    # act depending on the result of authentication
+    
+    # act epending on the result of authentication
     switch(result,
 
            # let new users indicate their rain tolerance
@@ -509,10 +517,10 @@ server <- function(input, output, session) {
            authenticated = { current_user(input$username); current_page("pick_start") },
 
            # give notification for wrong password
-           wrong_password = showNotification("Whoops, password or username are incorrect!",
+           wrong_password = showNotification("Whoops, password or username are incorrect!", 
                                              type = "error")
     )
-
+  
   })
 
   # change screen after rain tolerance was indicated
@@ -536,11 +544,11 @@ server <- function(input, output, session) {
     current_page("pick_start")
   })
 
-
-  # check if "home" is in saved locations
+  
+  # check if "home" in in saved location
   observeEvent(input$from_home, {
 
-    # if saved, use stored coordinates
+    # if saved put seved locations save location in reactiveVal from_coords
     if ("home" %in% get_locations(current_user(), example = TRUE)$label) {
       locs <- get_locations(current_user(), example = TRUE)
       match <- locs[locs$label == "home", ]
@@ -559,7 +567,7 @@ server <- function(input, output, session) {
           modalButton("Cancel"),
           actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
         ),
-
+        
         # allow to close modal by clicking outside
         easyClose = TRUE
       ))
@@ -1096,7 +1104,7 @@ server <- function(input, output, session) {
   })
 
 
-  # ── Reactives ───────────────────────────────────────────────────────────────
+## core app implementation
 
   # load user's rain tolerance — re-runs when tolerance_version changes
   tolerance <- reactive({
@@ -1151,24 +1159,24 @@ server <- function(input, output, session) {
     result <- rain_result()
 
     # pick message based on rain result
-    if (!result$safe_to_go) {
+    main <- if(!result$safe_to_go) {
       # no rain-free window found in today's forecast
       h3("No dry window today. Grab a raincoat")
 
     } else if (as.numeric(difftime(result$suggested_departure,
-                                   Sys.time(),
+                                   Sys.time(), 
                                    units = "mins")
-                          ) <= 5) {
+                          ) <= 5
+              ) { 
       # departure is now or within 5 minutes
       h3("You're good to go!")
-
     } else {
-      # departure is later — tell user when to leave
+      # departure is later - tell user when to leave
       h3(paste("Leave at", format(result$suggested_departure, "%H:%M"), "for a dry ride."))
     }
   })
 
-
+  
   # render rain plot — plot_rain handles NULL data internally
   output$rain_plot <- renderPlot({
     req(rain_result())

@@ -35,12 +35,14 @@ minutes count as near the end. Defaults to 5.}
 A named list with four elements: \code{safe_to_go} (TRUE if the
   route looks rain-free at the suggested departure time),
   \code{suggested_departure} (when to leave as a POSIXct, or NA if no dry
-  window was found today), \code{end_of_route_note} (a plain-text warning
-  if heavy rain is expected near the finish, otherwise NULL), and
-  \code{route_rain_summary} (a data frame of rain readings at each
-  checkpoint — only included when \code{safe_to_go} is TRUE and at least
-  some rain was detected below the threshold). A \code{note} field is added
-  when the result is approximate.
+  window was found today), \code{end_of_route_note} (a named list with
+  \code{level} (rain severity string) and \code{mins_from_end} (numeric,
+  minutes from the route end) if rain is expected near the finish, otherwise
+  NULL), and \code{route_rain_summary} (a data frame with columns
+  \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
+  \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, only
+  included when \code{safe_to_go} is TRUE and at least some rain was
+  detected below the threshold).
 }
 \description{
 Check whether it is safe to cycle now, or suggest when to leave

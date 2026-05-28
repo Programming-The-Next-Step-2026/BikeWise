@@ -41,15 +41,17 @@ geocode <- function(address) {
 #'   Geocoded automatically — no coordinates needed.
 #' @param display_name Optional display name for the location card. Only used
 #'   when \code{label} is \code{"custom1"} or \code{"custom2"}.
+#' @param example If \code{TRUE}, reads and writes a local CSV file instead of
+#'   Google Sheets. Used automatically by \code{run_example()}.
 #'
 #' @return The saved coordinates as a named list with \code{lat} and
 #'   \code{lon}.
 #'
 #' @details Geocodes the address and writes the result to the BikeWise Google
-#'   Sheet. If a location with the same label already exists for this user, it
-#'   is overwritten. Requires the environment variable
-#'   \code{BIKEWISE_SHEET_ID} to be set and a valid Google account
-#'   authenticated via \code{googlesheets4::gs4_auth()}.
+#'   Sheet, or to a local CSV when \code{example = TRUE}. If a location with
+#'   the same label already exists for this user, it is overwritten. The
+#'   Google Sheets backend requires \code{BIKEWISE_SHEET_ID} to be set and a
+#'   valid Google account authenticated via \code{googlesheets4::gs4_auth()}.
 #'
 #' @examples
 #' \dontrun{
@@ -61,9 +63,10 @@ geocode <- function(address) {
 #'
 #' @importFrom googlesheets4 read_sheet write_sheet
 #' @export
-save_location <- function(user, label, address, display_name = NULL) {
+save_location <- function(user, label, address, display_name = NULL,
+                          example = FALSE) {
 
-  # get coordinates using geocode function
+  # geocode the address
   coords <- geocode(address)
 
   # use preset title if no display name provided; NULL for custom labels
@@ -71,13 +74,7 @@ save_location <- function(user, label, address, display_name = NULL) {
     display_name <- PRESET_TITLES[[label]]
   }
 
-  # from the sheet get the whole location column
-  existing <- read_sheet(sheet_id(), sheet = "locations")
-
-  # don't select the row with the user and the provided label (if existent)
-  existing <- existing[!(existing$user == user & existing$label == label), ]
-
-  # create a new row based on the input
+  # build the new row — same structure for both backends
   new_row <- data.frame(
     user         = user,
     label        = label,
@@ -87,8 +84,22 @@ save_location <- function(user, label, address, display_name = NULL) {
     display_name = display_name
   )
 
-  # rewrite sheet with new row included
-  write_sheet(rbind(existing, new_row), ss = sheet_id(), sheet = "locations")
+  if (example) {
+
+    # load locations from local CSV and remove any existing row for this label
+    existing <- load_local_locations()
+    existing <- existing[!(existing$user == user & existing$label == label), ]
+    write.csv(rbind(existing, new_row), local_locations_path(),
+              row.names = FALSE)
+
+  } else {
+
+    # load from sheet and remove any existing row for this label
+    existing <- read_sheet(sheet_id(), sheet = "locations")
+    existing <- existing[!(existing$user == user & existing$label == label), ]
+    write_sheet(rbind(existing, new_row), ss = sheet_id(), sheet = "locations")
+
+  }
 
   # return coordinates
   return(coords)
