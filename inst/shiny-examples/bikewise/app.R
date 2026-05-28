@@ -15,7 +15,7 @@ ui <- fluidPage(
 # how data is loaded, and which screen to show next.
 
 
-## server helper functions, determining the ui per screen
+# ── UI helpers ────────────────────────────────────────────────────────────────
 # login_ui helper to determine the login screen
 login_ui <- function() {
 
@@ -38,7 +38,7 @@ login_ui <- function() {
 )
 }
 
-# rain_tolerance_ui to determine the rain preferance screen screen
+# rain_tolerance_ui to determine the rain preference screen
 rain_tolerance_ui <- function() {
 
   # use fluidrow to organise the UI
@@ -61,18 +61,17 @@ rain_tolerance_ui <- function() {
                           width = "200px")),
 
     fluidRow(actionButton("tol_heavy",
-                          tagList(icon("cloud-showers-heavy"), " I cycle in any weather"),
-                          width = "200px")),
-
-
-
+                          tagList(icon("cloud-showers-heavy"),
+                                  " I cycle in any weather"),
+                          width = "200px"))
     )
   )
 }
 
 # pick_start_ui to determine where to start your ride
-pick_start_ui <- function(saved_labels) { # saved labels is vector showing saved locations
-  
+# saved_labels: vector of saved location labels for this user
+pick_start_ui <- function(saved_labels) {
+
   # use taglist as container, as fluidRow messes with Layout
   tagList(
     fluidRow(column(12,
@@ -92,12 +91,12 @@ pick_start_ui <- function(saved_labels) { # saved labels is vector showing saved
 
     # create location cards with spacing between rows
     splitLayout(
-      actionButton("from_home", 
-                    tagList(icon("home"), " Home"), 
+      actionButton("from_home",
+                    tagList(icon("home"), " Home"),
                     width = "100%",
 
                     # change color to green if in saved_labels
-                    class = if ("home" %in% saved_labels){
+                    class = if ("home" %in% saved_labels) {
                       "btn-success"
                     } else {
                       "btn-default"
@@ -271,9 +270,10 @@ pick_end_ui <- function(saved_labels) {
                    })
     ),
     br(),
-    fluidRow(column(12, 
+    fluidRow(column(12,
                     align = "center",
-                    actionButton("back_btn", tagList(icon("arrow-left"), " Back"))
+                    actionButton("back_btn",
+                                 tagList(icon("arrow-left"), " Back"))
                     ))
   )
 
@@ -281,7 +281,7 @@ pick_end_ui <- function(saved_labels) {
 
 
 # route_ui to show the result of the bike route and rain forecast
-route_ui <- function(route_data, rain_result, tolerance) {
+route_ui <- function(route_data) {
 
   # setup layout
   tagList(
@@ -317,7 +317,8 @@ route_ui <- function(route_data, rain_result, tolerance) {
     )),
 
     # note pinned to bottom of page
-    div(style = "position: fixed; bottom: 20px; width: 100%; text-align: center;",
+    div(
+      style = "position: fixed; bottom: 20px; width: 100%; text-align: center;",
       p(em("Note: cycling times are estimates and may not be accurate."))
     )
 
@@ -327,7 +328,7 @@ route_ui <- function(route_data, rain_result, tolerance) {
 
 
 # settings_ui so that the user can update their preferences and locations
-settings_ui <- function(saved_labels, current_tolerance){
+settings_ui <- function(saved_labels) {
   tagList(
     fluidRow(column(12, align = "center",
     h2("Settings"),
@@ -440,7 +441,8 @@ settings_ui <- function(saved_labels, current_tolerance){
                    tagList(icon("cloud-rain"), " Moderate rain is fine"),
                    width = "100%"),
       actionButton("settings_tol_heavy",
-                   tagList(icon("cloud-showers-heavy"), " I cycle in any weather"),
+                   tagList(icon("cloud-showers-heavy"),
+                           " I cycle in any weather"),
                    width = "100%")
     ),
     br(),
@@ -474,53 +476,62 @@ server <- function(input, output, session) {
   previous_page    <- reactiveVal(NULL)
   tolerance_version <- reactiveVal(0)
 
-  # fetch saved locations for the current user
-  saved_locations <- reactive({
-    get_locations(current_user(), example = TRUE)
-  })
 
 
   # reads current_page() and draws matching screen
   output$page <- renderUI({
-    
+
     # change screen based on current_page()
     switch(current_page(),
            login = login_ui(),
            rain_preference = rain_tolerance_ui(),
-           pick_start = pick_start_ui(get_locations(current_user(), example = TRUE)$label), # fetch fresh locations to reflect newly saved ones
-           pick_end   = pick_end_ui(get_locations(current_user(), example = TRUE)$label),   # same here, ensures green cards show up after saving on pick_start
-           settings = settings_ui(
-            get_locations(current_user(), example = TRUE)$label,
-            tolerance()
+           # fetch fresh locations to reflect newly saved ones
+           pick_start = pick_start_ui(
+             get_locations(current_user(), example = TRUE)$label
            ),
-           route = route_ui(route_data(), rain_result(), tolerance()),
+           # same here, ensures green cards show up after saving on pick_start
+           pick_end = pick_end_ui(
+             get_locations(current_user(), example = TRUE)$label
+           ),
+           settings = settings_ui(
+             get_locations(current_user(), example = TRUE)$label
+           ),
+           route = route_ui(route_data()),
            h2("Unknown page")
     )
     })
 
 
-  # consider changing screen based on login_btn
+  # handle login button
   observeEvent(input$login_btn, {
 
     # store if user is authenticated based on provided credentials
-    result <- authenticate_user(input$username, 
-                                input$password, 
+    result <- authenticate_user(input$username,
+                                input$password,
                                 example = TRUE)
-    
-    # act epending on the result of authentication
+
+    # act depending on the result of authentication
     switch(result,
 
            # let new users indicate their rain tolerance
-           created = { current_user(input$username); current_page("rain_preference") },
+           created = {
+             current_user(input$username)
+             current_page("rain_preference")
+           },
 
            # switch to new UI; let user choose startpoint
-           authenticated = { current_user(input$username); current_page("pick_start") },
+           authenticated = {
+             current_user(input$username)
+             current_page("pick_start")
+           },
 
            # give notification for wrong password
-           wrong_password = showNotification("Whoops, password or username are incorrect!", 
-                                             type = "error")
+           wrong_password = showNotification(
+             "Whoops, password or username are incorrect!",
+             type = "error"
+           )
     )
-  
+
   })
 
   # change screen after rain tolerance was indicated
@@ -544,11 +555,11 @@ server <- function(input, output, session) {
     current_page("pick_start")
   })
 
-  
-  # check if "home" in in saved location
+
+  # check if "home" is in saved locations
   observeEvent(input$from_home, {
 
-    # if saved put seved locations save location in reactiveVal from_coords
+    # if saved, use stored coordinates
     if ("home" %in% get_locations(current_user(), example = TRUE)$label) {
       locs <- get_locations(current_user(), example = TRUE)
       match <- locs[locs$label == "home", ]
@@ -562,12 +573,14 @@ server <- function(input, output, session) {
       # define modal content
       showModal(modalDialog(
         title = "Add Home Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
-        
+
         # allow to close modal by clicking outside
         easyClose = TRUE
       ))
@@ -585,10 +598,12 @@ server <- function(input, output, session) {
       pending_label("work")
       showModal(modalDialog(
         title = "Add Work Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -600,16 +615,20 @@ server <- function(input, output, session) {
     if ("education" %in% get_locations(current_user(), example = TRUE)$label) {
       locs <- get_locations(current_user(), example = TRUE)
       match <- locs[locs$label == "education", ]
-      from_coords(list(lat = match$lat[1], lon = match$lon[1], label = "education"))
+      from_coords(list(
+        lat = match$lat[1], lon = match$lon[1], label = "education"
+      ))
       current_page("pick_end")
     } else {
       pending_label("education")
       showModal(modalDialog(
         title = "Add Education Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -621,16 +640,20 @@ server <- function(input, output, session) {
     if ("friends" %in% get_locations(current_user(), example = TRUE)$label) {
       locs <- get_locations(current_user(), example = TRUE)
       match <- locs[locs$label == "friends", ]
-      from_coords(list(lat = match$lat[1], lon = match$lon[1], label = "friends"))
+      from_coords(list(
+        lat = match$lat[1], lon = match$lon[1], label = "friends"
+      ))
       current_page("pick_end")
     } else {
       pending_label("friends")
       showModal(modalDialog(
         title = "Add Friends Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -642,16 +665,20 @@ server <- function(input, output, session) {
     if ("sports" %in% get_locations(current_user(), example = TRUE)$label) {
       locs <- get_locations(current_user(), example = TRUE)
       match <- locs[locs$label == "sports", ]
-      from_coords(list(lat = match$lat[1], lon = match$lon[1], label = "sports"))
+      from_coords(list(
+        lat = match$lat[1], lon = match$lon[1], label = "sports"
+      ))
       current_page("pick_end")
     } else {
       pending_label("sports")
       showModal(modalDialog(
         title = "Add Sports Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -669,10 +696,12 @@ server <- function(input, output, session) {
       pending_label("music")
       showModal(modalDialog(
         title = "Add Music Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -684,17 +713,22 @@ server <- function(input, output, session) {
     if ("custom1" %in% get_locations(current_user(), example = TRUE)$label) {
       locs <- get_locations(current_user(), example = TRUE)
       match <- locs[locs$label == "custom1", ]
-      from_coords(list(lat = match$lat[1], lon = match$lon[1], label = "custom1"))
+      from_coords(list(
+        lat = match$lat[1], lon = match$lon[1], label = "custom1"
+      ))
       current_page("pick_end")
     } else {
       pending_label("custom1")
       showModal(modalDialog(
         title = "Add Custom 1 Address",
-        textInput("custom_name", "Name", placeholder = "e.g. Gym, Parents' house"),
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("custom_name", "Name",
+                  placeholder = "e.g. Gym, Parents' house"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -706,17 +740,22 @@ server <- function(input, output, session) {
     if ("custom2" %in% get_locations(current_user(), example = TRUE)$label) {
       locs <- get_locations(current_user(), example = TRUE)
       match <- locs[locs$label == "custom2", ]
-      from_coords(list(lat = match$lat[1], lon = match$lon[1], label = "custom2"))
+      from_coords(list(
+        lat = match$lat[1], lon = match$lon[1], label = "custom2"
+      ))
       current_page("pick_end")
     } else {
       pending_label("custom2")
       showModal(modalDialog(
         title = "Add Custom 2 Address",
-        textInput("custom_name", "Name", placeholder = "e.g. Gym, Parents' house"),
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("custom_name", "Name",
+                  placeholder = "e.g. Gym, Parents' house"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -752,13 +791,17 @@ server <- function(input, output, session) {
 
     # store coords and navigate depending on which screen opened the modal
     if (current_page() == "pick_start") {
-      from_coords(list(lat = coords$lat, lon = coords$lon, label = pending_label()))
+      from_coords(list(
+        lat = coords$lat, lon = coords$lon, label = pending_label()
+      ))
       current_page("pick_end")
     } else if (current_page() == "settings") {
       # location updated from settings — stay on settings
       current_page("settings")
     } else {
-      to_coords(list(lat = coords$lat, lon = coords$lon, label = pending_label()))
+      to_coords(list(
+        lat = coords$lat, lon = coords$lon, label = pending_label()
+      ))
       current_page("route")
     }
   })
@@ -781,7 +824,10 @@ server <- function(input, output, session) {
     if ("home" %in% get_locations(current_user(), example = TRUE)$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "home") {
-        showNotification("Start and end can't be the same location.", type = "warning")
+        showNotification(
+          "Start and end can't be the same location.",
+          type = "warning"
+        )
         return()
       }
       locs <- get_locations(current_user(), example = TRUE)
@@ -792,10 +838,12 @@ server <- function(input, output, session) {
       pending_label("home")
       showModal(modalDialog(
         title = "Add Home Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -806,7 +854,10 @@ server <- function(input, output, session) {
     if ("work" %in% get_locations(current_user(), example = TRUE)$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "work") {
-        showNotification("Start and end can't be the same location.", type = "warning")
+        showNotification(
+          "Start and end can't be the same location.",
+          type = "warning"
+        )
         return()
       }
       locs <- get_locations(current_user(), example = TRUE)
@@ -817,10 +868,12 @@ server <- function(input, output, session) {
       pending_label("work")
       showModal(modalDialog(
         title = "Add Work Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -831,21 +884,28 @@ server <- function(input, output, session) {
     if ("education" %in% get_locations(current_user(), example = TRUE)$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "education") {
-        showNotification("Start and end can't be the same location.", type = "warning")
+        showNotification(
+          "Start and end can't be the same location.",
+          type = "warning"
+        )
         return()
       }
       locs <- get_locations(current_user(), example = TRUE)
       match <- locs[locs$label == "education", ]
-      to_coords(list(lat = match$lat[1], lon = match$lon[1], label = "education"))
+      to_coords(list(
+        lat = match$lat[1], lon = match$lon[1], label = "education"
+      ))
       current_page("route")
     } else {
       pending_label("education")
       showModal(modalDialog(
         title = "Add Education Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -856,7 +916,10 @@ server <- function(input, output, session) {
     if ("friends" %in% get_locations(current_user(), example = TRUE)$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "friends") {
-        showNotification("Start and end can't be the same location.", type = "warning")
+        showNotification(
+          "Start and end can't be the same location.",
+          type = "warning"
+        )
         return()
       }
       locs <- get_locations(current_user(), example = TRUE)
@@ -867,10 +930,12 @@ server <- function(input, output, session) {
       pending_label("friends")
       showModal(modalDialog(
         title = "Add Friends Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -881,7 +946,10 @@ server <- function(input, output, session) {
     if ("sports" %in% get_locations(current_user(), example = TRUE)$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "sports") {
-        showNotification("Start and end can't be the same location.", type = "warning")
+        showNotification(
+          "Start and end can't be the same location.",
+          type = "warning"
+        )
         return()
       }
       locs <- get_locations(current_user(), example = TRUE)
@@ -892,10 +960,12 @@ server <- function(input, output, session) {
       pending_label("sports")
       showModal(modalDialog(
         title = "Add Sports Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -906,7 +976,10 @@ server <- function(input, output, session) {
     if ("music" %in% get_locations(current_user(), example = TRUE)$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "music") {
-        showNotification("Start and end can't be the same location.", type = "warning")
+        showNotification(
+          "Start and end can't be the same location.",
+          type = "warning"
+        )
         return()
       }
       locs <- get_locations(current_user(), example = TRUE)
@@ -917,10 +990,12 @@ server <- function(input, output, session) {
       pending_label("music")
       showModal(modalDialog(
         title = "Add Music Address",
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -931,7 +1006,10 @@ server <- function(input, output, session) {
     if ("custom1" %in% get_locations(current_user(), example = TRUE)$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "custom1") {
-        showNotification("Start and end can't be the same location.", type = "warning")
+        showNotification(
+          "Start and end can't be the same location.",
+          type = "warning"
+        )
         return()
       }
       locs <- get_locations(current_user(), example = TRUE)
@@ -942,11 +1020,14 @@ server <- function(input, output, session) {
       pending_label("custom1")
       showModal(modalDialog(
         title = "Add Custom 1 Address",
-        textInput("custom_name", "Name", placeholder = "e.g. Gym, Parents' house"),
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("custom_name", "Name",
+                  placeholder = "e.g. Gym, Parents' house"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -957,7 +1038,10 @@ server <- function(input, output, session) {
     if ("custom2" %in% get_locations(current_user(), example = TRUE)$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "custom2") {
-        showNotification("Start and end can't be the same location.", type = "warning")
+        showNotification(
+          "Start and end can't be the same location.",
+          type = "warning"
+        )
         return()
       }
       locs <- get_locations(current_user(), example = TRUE)
@@ -968,11 +1052,14 @@ server <- function(input, output, session) {
       pending_label("custom2")
       showModal(modalDialog(
         title = "Add Custom 2 Address",
-        textInput("custom_name", "Name", placeholder = "e.g. Gym, Parents' house"),
-        textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+        textInput("custom_name", "Name",
+                  placeholder = "e.g. Gym, Parents' house"),
+        textInput("new_address", "Address",
+                  placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_address_btn", "Save & Use", class = "btn-primary")
+          actionButton("confirm_address_btn", "Save & Use",
+                       class = "btn-primary")
         ),
         easyClose = TRUE
       ))
@@ -996,9 +1083,11 @@ server <- function(input, output, session) {
     pending_label("home")
     showModal(modalDialog(
       title = "Update Home Address",
-      textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+      textInput("new_address", "Address",
+                placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
-                       actionButton("confirm_address_btn", "Save", class = "btn-primary")),
+                       actionButton("confirm_address_btn", "Save",
+                                    class = "btn-primary")),
       easyClose = TRUE
     ))
   })
@@ -1007,9 +1096,11 @@ server <- function(input, output, session) {
     pending_label("work")
     showModal(modalDialog(
       title = "Update Work Address",
-      textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+      textInput("new_address", "Address",
+                placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
-                       actionButton("confirm_address_btn", "Save", class = "btn-primary")),
+                       actionButton("confirm_address_btn", "Save",
+                                    class = "btn-primary")),
       easyClose = TRUE
     ))
   })
@@ -1018,9 +1109,11 @@ server <- function(input, output, session) {
     pending_label("education")
     showModal(modalDialog(
       title = "Update Education Address",
-      textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+      textInput("new_address", "Address",
+                placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
-                       actionButton("confirm_address_btn", "Save", class = "btn-primary")),
+                       actionButton("confirm_address_btn", "Save",
+                                    class = "btn-primary")),
       easyClose = TRUE
     ))
   })
@@ -1029,9 +1122,11 @@ server <- function(input, output, session) {
     pending_label("friends")
     showModal(modalDialog(
       title = "Update Friends Address",
-      textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+      textInput("new_address", "Address",
+                placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
-                       actionButton("confirm_address_btn", "Save", class = "btn-primary")),
+                       actionButton("confirm_address_btn", "Save",
+                                    class = "btn-primary")),
       easyClose = TRUE
     ))
   })
@@ -1040,9 +1135,11 @@ server <- function(input, output, session) {
     pending_label("sports")
     showModal(modalDialog(
       title = "Update Sports Address",
-      textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+      textInput("new_address", "Address",
+                placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
-                       actionButton("confirm_address_btn", "Save", class = "btn-primary")),
+                       actionButton("confirm_address_btn", "Save",
+                                    class = "btn-primary")),
       easyClose = TRUE
     ))
   })
@@ -1051,9 +1148,11 @@ server <- function(input, output, session) {
     pending_label("music")
     showModal(modalDialog(
       title = "Update Music Address",
-      textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+      textInput("new_address", "Address",
+                placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
-                       actionButton("confirm_address_btn", "Save", class = "btn-primary")),
+                       actionButton("confirm_address_btn", "Save",
+                                    class = "btn-primary")),
       easyClose = TRUE
     ))
   })
@@ -1062,10 +1161,13 @@ server <- function(input, output, session) {
     pending_label("custom1")
     showModal(modalDialog(
       title = "Update Custom 1 Address",
-      textInput("custom_name", "Name", placeholder = "e.g. Gym, Parents' house"),
-      textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+      textInput("custom_name", "Name",
+                placeholder = "e.g. Gym, Parents' house"),
+      textInput("new_address", "Address",
+                placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
-                       actionButton("confirm_address_btn", "Save", class = "btn-primary")),
+                       actionButton("confirm_address_btn", "Save",
+                                    class = "btn-primary")),
       easyClose = TRUE
     ))
   })
@@ -1074,10 +1176,13 @@ server <- function(input, output, session) {
     pending_label("custom2")
     showModal(modalDialog(
       title = "Update Custom 2 Address",
-      textInput("custom_name", "Name", placeholder = "e.g. Gym, Parents' house"),
-      textInput("new_address", "Address", placeholder = "e.g. Roetersstraat, Amsterdam"),
+      textInput("custom_name", "Name",
+                placeholder = "e.g. Gym, Parents' house"),
+      textInput("new_address", "Address",
+                placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
-                       actionButton("confirm_address_btn", "Save", class = "btn-primary")),
+                       actionButton("confirm_address_btn", "Save",
+                                    class = "btn-primary")),
       easyClose = TRUE
     ))
   })
@@ -1104,7 +1209,7 @@ server <- function(input, output, session) {
   })
 
 
-## core app implementation
+  # ── Reactives ───────────────────────────────────────────────────────────────
 
   # load user's rain tolerance — re-runs when tolerance_version changes
   tolerance <- reactive({
@@ -1150,7 +1255,7 @@ server <- function(input, output, session) {
     req(tolerance())
 
     # return and end if heavy tolerance
-    if(tolerance() == "heavy"){
+    if (tolerance() == "heavy") {
       return(h3("Built different. Just ride."))
     }
 
@@ -1159,24 +1264,26 @@ server <- function(input, output, session) {
     result <- rain_result()
 
     # pick message based on rain result
-    main <- if(!result$safe_to_go) {
+    if (!result$safe_to_go) {
       # no rain-free window found in today's forecast
       h3("No dry window today. Grab a raincoat")
 
     } else if (as.numeric(difftime(result$suggested_departure,
-                                   Sys.time(), 
+                                   Sys.time(),
                                    units = "mins")
-                          ) <= 5
-              ) { 
+                          ) <= 5) {
       # departure is now or within 5 minutes
       h3("You're good to go!")
+
     } else {
-      # departure is later - tell user when to leave
-      h3(paste("Leave at", format(result$suggested_departure, "%H:%M"), "for a dry ride."))
+      # departure is later — tell user when to leave
+      h3(paste("Leave at",
+               format(result$suggested_departure, "%H:%M"),
+               "for a dry ride."))
     }
   })
 
-  
+
   # render rain plot — plot_rain handles NULL data internally
   output$rain_plot <- renderPlot({
     req(rain_result())

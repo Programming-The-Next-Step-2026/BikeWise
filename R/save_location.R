@@ -6,10 +6,10 @@ geocode <- function(address) {
 
   # create query
   resp <- request("https://nominatim.openstreetmap.org/search") |>
-    
+
     # needed info, including address input
     req_url_query(q = address, format = "json", limit = 1) |>
-    
+
     # needed user, as otherwise blocked request
     req_headers(`User-Agent` = "BikeWise R package") |>
     req_perform()
@@ -102,5 +102,5 @@ save_location <- function(user, label, address, display_name = NULL,
   }
 
   # return coordinates
-  return(coords)
+  coords
 }

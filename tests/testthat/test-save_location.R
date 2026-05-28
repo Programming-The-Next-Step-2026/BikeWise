@@ -32,7 +32,8 @@ test_that("save_location returns lat and lon", {
   expect_equal(result$lon, 4.89)
 })
 
-# Test that preset labels get their display_name from PRESET_TITLES automatically
+# Test that preset labels get their display_name from PRESET_TITLES
+# automatically
 test_that("save_location sets display_name from PRESET_TITLES", {
   written <- NULL
   local_mocked_bindings(

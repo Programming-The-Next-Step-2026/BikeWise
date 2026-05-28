@@ -35,7 +35,7 @@ test_that("authenticate_user returns 'authenticated' for a correct password", {
 })
 
 # Test that the wrong password is rejected
-test_that("authenticate_user returns 'wrong_password' for an incorrect password", {
+test_that("authenticate_user returns 'wrong_password' for wrong password", {
   local_mocked_bindings(
     sheet_id    = function() "dummy",
     read_sheet  = function(...) fake_users,
@@ -51,7 +51,10 @@ test_that("authenticate_user writes a new row when creating an account", {
   local_mocked_bindings(
     sheet_id    = function() "dummy",
     read_sheet  = function(...) fake_users,
-    write_sheet = function(data, ...) { written <<- data; invisible(NULL) },
+    write_sheet = function(data, ...) {
+      written <<- data
+      invisible(NULL)
+    },
     .package = "BikeWise"
   )
   authenticate_user("bob", "mypassword")
@@ -64,7 +67,10 @@ test_that("authenticate_user stores a SHA-256 hash, not the plain password", {
   local_mocked_bindings(
     sheet_id    = function() "dummy",
     read_sheet  = function(...) fake_users,
-    write_sheet = function(data, ...) { written <<- data; invisible(NULL) },
+    write_sheet = function(data, ...) {
+      written <<- data
+      invisible(NULL)
+    },
     .package = "BikeWise"
   )
   authenticate_user("bob", "mypassword")
@@ -83,33 +89,37 @@ test_that("authenticate_user returns 'created' for a new username (example)", {
     R_user_dir = function(...) tmp,
     .package = "BikeWise"
   )
-  expect_equal(authenticate_user("bob", "mypassword", example = TRUE), "created")
+  expect_equal(authenticate_user("bob", "mypassword", example = TRUE),
+               "created")
 })
 
-# Test that the correct password gives access to an existing account in the local CSV
-test_that("authenticate_user returns 'authenticated' for a correct password (example)", {
+# Test that the correct password gives access to an existing account
+# in the local CSV
+test_that("authenticate_user authenticates correct password in CSV (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
     R_user_dir = function(...) tmp,
     .package = "BikeWise"
   )
   write.csv(fake_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
-  expect_equal(authenticate_user("alice", "secret", example = TRUE), "authenticated")
+  expect_equal(authenticate_user("alice", "secret", example = TRUE),
+               "authenticated")
 })
 
 # Test that the wrong password is rejected in the local CSV
-test_that("authenticate_user returns 'wrong_password' for an incorrect password (example)", {
+test_that("authenticate_user rejects wrong password via CSV (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
     R_user_dir = function(...) tmp,
     .package = "BikeWise"
   )
   write.csv(fake_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
-  expect_equal(authenticate_user("alice", "notmypassword", example = TRUE), "wrong_password")
+  expect_equal(authenticate_user("alice", "notmypassword", example = TRUE),
+               "wrong_password")
 })
 
 # Test that creating a new account actually writes the new row to the CSV
-test_that("authenticate_user writes a new row to the CSV when creating an account (example)", {
+test_that("authenticate_user writes new row to CSV on creation (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
     R_user_dir = function(...) tmp,
@@ -121,7 +131,7 @@ test_that("authenticate_user writes a new row to the CSV when creating an accoun
 })
 
 # Test that the stored password is hashed, not plain-text
-test_that("authenticate_user stores a SHA-256 hash in the CSV, not the plain password (example)", {
+test_that("authenticate_user stores hash not plain password in CSV (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
     R_user_dir = function(...) tmp,

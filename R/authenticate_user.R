@@ -39,7 +39,7 @@ authenticate_user <- function(username, password, example = FALSE) {
 
     # check whether password matches stored hash
     stored <- users$password_hash[users$username == username]
-    if (stored == hash) return("authenticated") else return("wrong_password")
+    if (stored == hash) "authenticated" else "wrong_password"
 
   } else {
 
@@ -59,7 +59,7 @@ authenticate_user <- function(username, password, example = FALSE) {
 
     # check whether password matches stored hash
     stored <- users$password_hash[users$username == username]
-    if (stored == hash) return("authenticated") else return("wrong_password")
+    if (stored == hash) "authenticated" else "wrong_password"
 
   }
 

@@ -11,7 +11,8 @@
 #'   \code{route_rain_summary} is \code{NULL}.
 #'
 #' @importFrom ggplot2 ggplot aes geom_area geom_line geom_hline labs
-#' @importFrom ggplot2 scale_y_continuous coord_cartesian theme_classic theme_void
+#' @importFrom ggplot2 scale_y_continuous coord_cartesian theme_classic
+#' @importFrom ggplot2 theme_void
 #' @export
 plot_rain <- function(route_rain_summary, tolerance = "moderate") {
 

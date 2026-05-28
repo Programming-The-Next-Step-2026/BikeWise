@@ -1,5 +1,6 @@
 # Tests for the geocode internal helper (lives in save_location.R).
-# All tests require an internet connection and are skipped if Nominatim is unreachable.
+# All tests require an internet connection and are skipped
+# if Nominatim is unreachable.
 
 # Geocode a well-known address once to avoid repeated API calls
 result_dam <- tryCatch(BikeWise:::geocode("Dam Square, Amsterdam"),

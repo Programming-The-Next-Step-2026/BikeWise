@@ -16,7 +16,7 @@ test_that("local_users_path returns a path ending in example_users.csv", {
 })
 
 # Test that the locations path points to the right filename
-test_that("local_locations_path returns a path ending in example_locations.csv", {
+test_that("local_locations_path ends with example_locations.csv", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
     R_user_dir = function(...) tmp,
@@ -41,7 +41,7 @@ test_that("local_store_dir creates the folder if it does not exist yet", {
 # ── Load helpers ──────────────────────────────────────────────────────────────
 
 # Test that the users table has the right columns on a first-ever call
-test_that("load_local_users returns a data frame with correct columns on first call", {
+test_that("load_local_users returns correct columns on first call", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
     R_user_dir = function(...) tmp,
@@ -64,7 +64,7 @@ test_that("load_local_users creates the CSV file on first call", {
 })
 
 # Test that the locations table has the right columns on a first-ever call
-test_that("load_local_locations returns a data frame with correct columns on first call", {
+test_that("load_local_locations returns correct columns on first call", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
     R_user_dir = function(...) tmp,
@@ -72,7 +72,8 @@ test_that("load_local_locations returns a data frame with correct columns on fir
   )
   result <- load_local_locations()
   expect_s3_class(result, "data.frame")
-  expect_named(result, c("user", "label", "address", "lat", "lon", "display_name"))
+  expect_named(result,
+               c("user", "label", "address", "lat", "lon", "display_name"))
 })
 
 # Test that the CSV file is written to disk on the first call

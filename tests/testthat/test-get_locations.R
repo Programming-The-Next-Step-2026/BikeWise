@@ -13,7 +13,8 @@ fake_locations <- data.frame(
   display_name = c("Home",  "Work",  "Home")
 )
 
-# Test that calling without a label returns all of that user's rows as a data frame
+# Test that calling without a label returns all of that user's rows
+# as a data frame
 test_that("get_locations returns a data frame of all locations for a user", {
   local_mocked_bindings(
     sheet_id   = function() "dummy",
@@ -41,7 +42,7 @@ test_that("get_locations returns a named lat/lon list when a label is given", {
 })
 
 # Test that a label which does not exist for that user throws a clear error
-test_that("get_locations errors with an informative message for an unknown label", {
+test_that("get_locations errors with informative message for unknown label", {
   local_mocked_bindings(
     sheet_id   = function() "dummy",
     read_sheet = function(...) fake_locations,
@@ -67,7 +68,8 @@ test_that("get_locations only returns rows belonging to the requested user", {
 
 # ── Local CSV backend (example = TRUE) ───────────────────────────────────────
 
-# Test that calling without a label returns all of that user's rows as a data frame
+# Test that calling without a label returns all of that user's rows
+# as a data frame
 test_that("get_locations returns a data frame of all locations (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(

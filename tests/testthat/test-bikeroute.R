@@ -67,11 +67,12 @@ test_that("timed_coords always starts at 0 and ends at duration_min", {
   expect_equal(times[length(times)], route$duration_min)
 })
 
-# Test that the internal interval is 2 minutes (hardcoded for raintracker resolution)
-test_that("timed_coords timestamps are spaced at the hardcoded 2-minute interval", {
+# Test that the internal interval is 2 minutes
+# (hardcoded for raintracker resolution)
+test_that("timed_coords timestamps are spaced at the 2-minute interval", {
   skip_if(is.null(route), "OSRM API unavailable")
   times <- route$timed_coords$time_min
-  # exclude the final gap, which may be shorter if duration is not a multiple of 2
+  # exclude the final gap — may be shorter if duration is not a multiple of 2
   diffs <- diff(times[-length(times)])
   expect_true(all(abs(diffs - 2) < 0.001))
 })

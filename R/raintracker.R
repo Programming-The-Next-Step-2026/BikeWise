@@ -107,7 +107,8 @@ raintracker <- function(timed_df,
 
   # For each km mark along the route, find the row in timed_df closest to it
   km_marks <- seq(0, max(timed_df$dist_km), by = check_interval_km)
-  idx      <- sapply(km_marks, function(km) which.min(abs(timed_df$dist_km - km)))
+  idx <- sapply(km_marks,
+               function(km) which.min(abs(timed_df$dist_km - km)))
 
   # Always include the final row so the end of the route is checked
   idx <- sort(unique(c(idx, nrow(timed_df))))

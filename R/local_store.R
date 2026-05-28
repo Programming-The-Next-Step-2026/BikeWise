@@ -22,7 +22,8 @@ local_locations_path <- function() {
   file.path(local_store_dir(), "example_locations.csv")
 }
 
-# Read the users CSV; if it does not exist yet, create an empty one and return it
+# Read the users CSV; if it does not exist yet,
+# create an empty one and return it
 #' @noRd
 load_local_users <- function() {
   path <- local_users_path()
@@ -38,7 +39,8 @@ load_local_users <- function() {
   read.csv(path)
 }
 
-# Read the locations CSV; if it does not exist yet, create an empty one and return it
+# Read the locations CSV; if it does not exist yet,
+# create an empty one and return it
 #' @noRd
 load_local_locations <- function() {
   path <- local_locations_path()

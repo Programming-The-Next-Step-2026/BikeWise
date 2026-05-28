@@ -13,7 +13,7 @@ fake_users <- data.frame(
 # ── Google Sheets backend (example = FALSE) ───────────────────────────────────
 
 # Test that the getter returns whatever is stored in the sheet
-test_that("rain_preference returns the stored preference when called without a value", {
+test_that("rain_preference returns stored preference without a value arg", {
   local_mocked_bindings(
     sheet_id   = function() "dummy",
     read_sheet = function(...) fake_users,
@@ -28,7 +28,10 @@ test_that("rain_preference updates the sheet when called with a new value", {
   local_mocked_bindings(
     sheet_id    = function() "dummy",
     read_sheet  = function(...) fake_users,
-    write_sheet = function(data, ...) { written <<- data; invisible(NULL) },
+    write_sheet = function(data, ...) {
+      written <<- data
+      invisible(NULL)
+    },
     .package    = "BikeWise"
   )
   rain_preference("alice", preference = "light")
