@@ -1,8 +1,10 @@
 PRESET_TITLES <- c(
   home      = "Home",
   work      = "Work",
-  school    = "School",
-  gym       = "Gym",
+  education = "Education",
+  friends   = "Friends",
+  sports    = "Sports",
+  music     = "Music",
   custom1   = "Custom 1",
   custom2   = "Custom 2"
 )

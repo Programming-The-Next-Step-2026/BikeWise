@@ -71,7 +71,7 @@ save_location <- function(user, label, address, display_name = NULL,
 
   # use preset title if no display name provided; NULL for custom labels
   if (is.null(display_name)) {
-    display_name <- PRESET_TITLES[[label]]
+    display_name <- PRESET_TITLES[label]
   }
 
   # build the new row — same structure for both backends
