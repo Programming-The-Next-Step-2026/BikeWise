@@ -51,15 +51,15 @@ rain_tolerance_ui <- function() {
     fluidRow(actionButton("tol_none",
                           tagList(icon("sun"), " No rain"),
                           width = "200px")),
-
+    br(),
     fluidRow(actionButton("tol_light",
                           tagList(icon("cloud"), " Light rain is fine"),
                           width = "200px")),
-
+    br(),
     fluidRow(actionButton("tol_moderate",
                           tagList(icon("cloud-rain"), " Moderate rain is fine"),
                           width = "200px")),
-
+    br(),
     fluidRow(actionButton("tol_heavy",
                           tagList(icon("cloud-showers-heavy"),
                                   " I cycle in any weather"),
@@ -309,12 +309,14 @@ route_ui <- function(route_data) {
           h3(icon("clock"), paste(route_data$duration_min, "min")))
     ),
 
-    # new route button
+    # new route and logout buttons side by side
     br(),
-    fluidRow(column(12, align = "center",
-      actionButton("new_route_btn", tagList(icon("route"), " Plan a new route"),
-                   class = "btn-default")
-    )),
+    splitLayout(
+      actionButton("new_route_btn", tagList(icon("route"), " New route"),
+                   width = "100%", class = "btn-default"),
+      actionButton("logout_btn", tagList(icon("sign-out-alt"), " Log out"),
+                   width = "100%", class = "btn-danger")
+    ),
 
     # note pinned to bottom of page
     div(
@@ -721,8 +723,6 @@ server <- function(input, output, session) {
       pending_label("custom1")
       showModal(modalDialog(
         title = "Add Custom 1 Address",
-        textInput("custom_name", "Name",
-                  placeholder = "e.g. Gym, Parents' house"),
         textInput("new_address", "Address",
                   placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
@@ -748,8 +748,6 @@ server <- function(input, output, session) {
       pending_label("custom2")
       showModal(modalDialog(
         title = "Add Custom 2 Address",
-        textInput("custom_name", "Name",
-                  placeholder = "e.g. Gym, Parents' house"),
         textInput("new_address", "Address",
                   placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
@@ -766,17 +764,10 @@ server <- function(input, output, session) {
   # save address from modal — handles both pick_start and pick_end
   observeEvent(input$confirm_address_btn, {
 
-    # for custom labels, use the provided name; otherwise NULL
-    display_name <- if (pending_label() %in% c("custom1", "custom2")) {
-      input$custom_name
-    } else {
-      NULL
-    }
-
     # call coords, but make sure to give warning if address unavailable
     coords <- tryCatch(
       save_location(current_user(), pending_label(), input$new_address,
-                    display_name = display_name, example = TRUE),
+                    example = TRUE),
       error = function(e) {
         showNotification("Address not found. Please try a different address.",
                          type = "error", duration = 5)
@@ -817,6 +808,14 @@ server <- function(input, output, session) {
     from_coords(NULL)
     to_coords(NULL)
     current_page("pick_start")
+  })
+
+  # clear session state and return to login
+  observeEvent(input$logout_btn, {
+    current_user(NULL)
+    from_coords(NULL)
+    to_coords(NULL)
+    current_page("login")
   })
 
   # to_* location buttons — same logic as from_* but stores to to_coords
@@ -1020,8 +1019,6 @@ server <- function(input, output, session) {
       pending_label("custom1")
       showModal(modalDialog(
         title = "Add Custom 1 Address",
-        textInput("custom_name", "Name",
-                  placeholder = "e.g. Gym, Parents' house"),
         textInput("new_address", "Address",
                   placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
@@ -1052,8 +1049,6 @@ server <- function(input, output, session) {
       pending_label("custom2")
       showModal(modalDialog(
         title = "Add Custom 2 Address",
-        textInput("custom_name", "Name",
-                  placeholder = "e.g. Gym, Parents' house"),
         textInput("new_address", "Address",
                   placeholder = "e.g. Roetersstraat, Amsterdam"),
         footer = tagList(
@@ -1161,8 +1156,6 @@ server <- function(input, output, session) {
     pending_label("custom1")
     showModal(modalDialog(
       title = "Update Custom 1 Address",
-      textInput("custom_name", "Name",
-                placeholder = "e.g. Gym, Parents' house"),
       textInput("new_address", "Address",
                 placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
@@ -1176,8 +1169,6 @@ server <- function(input, output, session) {
     pending_label("custom2")
     showModal(modalDialog(
       title = "Update Custom 2 Address",
-      textInput("custom_name", "Name",
-                placeholder = "e.g. Gym, Parents' house"),
       textInput("new_address", "Address",
                 placeholder = "e.g. Roetersstraat, Amsterdam"),
       footer = tagList(modalButton("Cancel"),
