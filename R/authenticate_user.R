@@ -20,7 +20,7 @@
 #'
 #' @importFrom googlesheets4 read_sheet write_sheet
 #' @importFrom digest digest
-#' @export
+#' @noRd
 authenticate_user <- function(username, password, example = FALSE) {
 
   # encrypt password — same regardless of backend

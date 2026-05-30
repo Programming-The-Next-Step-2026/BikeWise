@@ -2,12 +2,7 @@
 
 export(StartCycling)
 export(StartCyclingOnline)
-export(authenticate_user)
 export(bikeroute)
-export(cycling_speed)
-export(get_locations)
-export(plot_rain)
-export(rain_tolerance)
 export(raintracker)
 export(save_location)
 importFrom(digest,digest)

@@ -24,11 +24,11 @@ test_that("StartCyclingOnline stops when only some env vars are missing", {
   expect_no_match(err$message, "BIKEWISE_SHEET_ID")
 })
 
-test_that("StartCyclingOnline error message references ?StartCyclingOnline", {
+test_that("StartCyclingOnline error message references the vignette", {
   withr::local_envvar(
     BIKEWISE_SHEET_ID        = "",
     BIKEWISE_SERVICE_ACCOUNT = "",
     BIKEWISE_ENCRYPTION_KEY  = ""
   )
-  expect_error(StartCyclingOnline(), "\\?StartCyclingOnline")
+  expect_error(StartCyclingOnline(), "online-setup")
 })

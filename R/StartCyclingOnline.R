@@ -37,7 +37,7 @@ StartCyclingOnline <- function() {
       "The following environment variables are not set: ",
       paste(missing, collapse = ", "), ".\n",
       "Add them to your .Renviron file and restart R.\n",
-      "See ?StartCyclingOnline for setup instructions."
+      "See vignette(\"online-setup\", package = \"BikeWise\") for setup instructions."
     )
   }
 

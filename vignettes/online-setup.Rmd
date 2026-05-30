@@ -148,10 +148,37 @@ Sheets using the service account, and open the app in your browser.
 
 ## Deploying to shinyapps.io
 
-Set all three variables in your app dashboard under
-**Settings → Environment Variables**.
+1. Create a free account at [shinyapps.io](https://www.shinyapps.io).
 
-For `BIKEWISE_SERVICE_ACCOUNT`, paste the **full contents** of the JSON file
-as the value (not the file path). It starts with `{` — just open the file in
-a text editor, select all, and paste it in. The authentication library
-detects automatically that it is a JSON string rather than a file path.
+2. In R, install the deployment package:
+
+   ```r
+   install.packages("rsconnect")
+   ```
+
+3. In the shinyapps.io dashboard go to **Account → Tokens → Show** and copy
+   the `rsconnect::setAccountInfo(...)` command. Run it in R once to link
+   your machine.
+
+4. Deploy the app:
+
+   ```r
+   rsconnect::deployApp(
+     appDir = system.file("shiny-examples/bikewise", package = "BikeWise")
+   )
+   ```
+
+5. In the shinyapps.io dashboard, open your app and go to
+   **Settings → Environment Variables**. Add the three variables:
+
+   ```
+   BIKEWISE_SHEET_ID        your-sheet-id
+   BIKEWISE_SERVICE_ACCOUNT paste the full contents of the JSON key file here
+   BIKEWISE_ENCRYPTION_KEY  your-encryption-key
+   ```
+
+   For `BIKEWISE_SERVICE_ACCOUNT`, open the JSON file in a text editor,
+   select all, and paste the contents as the value — not the file path.
+   The authentication library detects automatically that it is a JSON string.
+
+   Click **Restart** after saving the variables.
