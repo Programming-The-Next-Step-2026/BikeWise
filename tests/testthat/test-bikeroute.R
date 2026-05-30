@@ -27,22 +27,29 @@ test_that("timed_coords has correct columns", {
   expect_named(route$timed_coords, c("time_min", "dist_km", "lon", "lat"))
 })
 
-# Test timed_coords starts at 0 and ends at duration_min
-test_that("timed_coords always starts at 0 and ends at duration_min", {
+# Test timed_coords spans the full route in both distance and time
+test_that("timed_coords starts at 0 and ends at the full distance and duration", {
   skip_if(is.null(route), "OSRM API unavailable")
+  dists <- route$timed_coords$dist_km
   times <- route$timed_coords$time_min
+  expect_equal(dists[1], 0)
   expect_equal(times[1], 0)
   expect_equal(times[length(times)], route$duration_min)
 })
 
-# Test that the internal interval is 2 minutes
-# (hardcoded for raintracker resolution)
-test_that("timed_coords timestamps are spaced at the 2-minute interval", {
+# Test that distance marks are spaced at 1 km intervals (matching raintracker resolution)
+test_that("timed_coords distance marks are spaced at 1 km intervals", {
   skip_if(is.null(route), "OSRM API unavailable")
-  times <- route$timed_coords$time_min
-  # exclude the final gap — may be shorter if duration is not a multiple of 2
-  diffs <- diff(times[-length(times)])
-  expect_true(all(abs(diffs - 2) < 0.001))
+  dists <- route$timed_coords$dist_km
+  # exclude the final gap — may be shorter if total distance is not a multiple of 1 km
+  diffs <- diff(dists[-length(dists)])
+  expect_true(all(abs(diffs - 1) < 0.001))
+})
+
+# Test that duration_min is consistent with distance_km and speed_kmh
+test_that("duration_min is consistent with distance_km at default speed", {
+  skip_if(is.null(route), "OSRM API unavailable")
+  expect_equal(route$duration_min, round(route$distance_km / 15 * 60, 1))
 })
 
 # Test error for unroutable coordinates

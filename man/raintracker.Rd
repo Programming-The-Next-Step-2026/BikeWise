@@ -47,9 +47,6 @@ Checks the weather at regular intervals along your route using the
   that spot and shifts the suggested departure time forward accordingly,
   repeating until the full route is clear. If no dry window is found within
   24 hours, \code{suggested_departure} is returned as \code{NA}.
-
-  Because the forecast resolution is 15 minutes, suggested departure times
-  are rounded to the nearest 15 minutes.
 }
 \examples{
 route <- bikeroute(52.3731, 4.8922, 52.3579, 4.8686)

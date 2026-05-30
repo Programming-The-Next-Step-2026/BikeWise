@@ -4,18 +4,21 @@
 #' @param from_lon Longitude of your starting point (e.g. \code{4.8922}).
 #' @param to_lat Latitude of your destination.
 #' @param to_lon Longitude of your destination.
+#' @param speed_kmh Assumed cycling speed in km/h used to estimate travel time
+#'   (default: 15).
 #'
 #' @return A named list with three elements: \code{timed_coords} (your
-#'   estimated position at each time interval, as a data frame with columns
+#'   estimated position at each kilometre mark, as a data frame with columns
 #'   \code{time_min}, \code{dist_km}, \code{lon}, and \code{lat}),
 #'   \code{duration_min} (estimated cycling time in minutes), and
 #'   \code{distance_km} (total route length in kilometres).
 #'
 #' @details Uses the public OSRM routing API with the cycling profile to find
 #'   the route. Coordinates should be standard decimal latitude and longitude
-#'   (e.g. \code{52.3731, 4.8922}). Estimated positions along the route are
-#'   calculated by assuming a constant cycling speed and interpolating between
-#'   waypoints using the Haversine formula.
+#'   (e.g. \code{52.3731, 4.8922}). Travel time is estimated from the
+#'   Haversine route distance divided by \code{speed_kmh}, independent of the
+#'   OSRM duration. Estimated positions along the route are calculated by
+#'   assuming constant speed and interpolating between waypoints.
 #'
 #' @examples
 #' bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
@@ -23,10 +26,9 @@
 #' @importFrom httr2 request req_url_query req_perform resp_body_json
 #' @importFrom stats approx
 #' @export
-bikeroute <- function(from_lat, from_lon, to_lat, to_lon) {
-  # needs to be small enough so raintracker can find a row near each km mark
-  # at ~15 km/h cycling speed, 2 min ~ 500m which is fine for 1km checkpoints
-  interval_min <- 2
+bikeroute <- function(from_lat, from_lon, to_lat, to_lon, speed_kmh = 15) {
+  # matches raintracker's default check_interval_km so lookups land exactly on rows
+  interval_km <- 1
 
   base_url <- "https://router.project-osrm.org/route/v1/bike"
   coords   <- paste0(from_lon, ",", from_lat, ";", to_lon, ",", to_lat)
@@ -48,11 +50,9 @@ bikeroute <- function(from_lat, from_lon, to_lat, to_lon) {
     stop("OSRM error: ", body$code)
   }
 
-  # Collect coordinates in df, cycling duration,and total distance
+  # Collect coordinates in df
   route        <- body$routes[[1]]
   coords_list  <- route$geometry$coordinates
-  duration_min <- round(route$duration / 60, 1)
-  distance_km  <- round(route$distance / 1000, 2)
 
   coords_df <- data.frame(
     lon = sapply(coords_list, `[[`, 1),
@@ -86,21 +86,24 @@ bikeroute <- function(from_lat, from_lon, to_lat, to_lon) {
   # cumsum() turns per-segment distances into a running total from the start.
   cum_km <- cumsum(seg_km)
 
+  # Both time and distance derived from our own Haversine calculation for consistency
+  distance_km  <- round(cum_km[n], 2)
+  duration_min <- round(cum_km[n] / speed_kmh * 60, 1)
 
-  # Build sequence of timestamps, forcing the final timestamp to be included
-  timestamps <- unique(c(seq(0, duration_min, by = interval_min), duration_min))
+  # Build km marks along the route, forcing the final point to be included
+  dist_marks <- unique(c(seq(0, cum_km[n], by = interval_km), cum_km[n]))
 
-  # Convert timestamps to distances along the route (constant speed)
-  dist_at_t <- timestamps * (cum_km[n] / duration_min)
+  # Derive time at each distance mark (constant speed assumption)
+  time_at_d <- dist_marks / cum_km[n] * duration_min
 
   # Linearly interpolate lon and lat at each target distance using approx()
   # Deduplicate cum_km first — OSRM can return consecutive identical waypoints
   keep <- !duplicated(cum_km)
   timed_df <- data.frame(
-    time_min = timestamps,
-    dist_km  = dist_at_t,
-    lon      = approx(cum_km[keep], coords_df$lon[keep], xout = dist_at_t)$y,
-    lat      = approx(cum_km[keep], coords_df$lat[keep], xout = dist_at_t)$y
+    time_min = time_at_d,
+    dist_km  = dist_marks,
+    lon      = approx(cum_km[keep], coords_df$lon[keep], xout = dist_marks)$y,
+    lat      = approx(cum_km[keep], coords_df$lat[keep], xout = dist_marks)$y
   )
 
   list(

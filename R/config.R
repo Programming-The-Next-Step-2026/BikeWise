@@ -10,7 +10,7 @@ PRESET_TITLES <- c(
 )
 
 # mm/h value at which each tolerance level is breached
-RAIN_THRESHOLDS <- c(none = 0.1, light = 2.5, moderate = 10, heavy = 10)
+RAIN_THRESHOLDS <- c(none = 0.1, light = 2.5, moderate = 10)
 
 #' @noRd
 sheet_id <- function() {

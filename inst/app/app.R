@@ -321,7 +321,7 @@ route_ui <- function(route_data) {
     # note pinned to bottom of page
     div(
       style = "position: fixed; bottom: 20px; width: 100%; text-align: center;",
-      p(em("Note: cycling times are estimates and may not be accurate."))
+      p(em("Note: cycling times assume a constant pace and may vary with terrain and wind."))
     )
 
 

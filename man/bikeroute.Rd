@@ -4,7 +4,7 @@
 \alias{bikeroute}
 \title{Plan a cycling route between two coordinates}
 \usage{
-bikeroute(from_lat, from_lon, to_lat, to_lon)
+bikeroute(from_lat, from_lon, to_lat, to_lon, speed_kmh = 15)
 }
 \arguments{
 \item{from_lat}{Latitude of your starting point (e.g. \code{52.3731}).}
@@ -14,10 +14,13 @@ bikeroute(from_lat, from_lon, to_lat, to_lon)
 \item{to_lat}{Latitude of your destination.}
 
 \item{to_lon}{Longitude of your destination.}
+
+\item{speed_kmh}{Assumed cycling speed in km/h used to estimate travel time
+(default: 15).}
 }
 \value{
 A named list with three elements: \code{timed_coords} (your
-  estimated position at each time interval, as a data frame with columns
+  estimated position at each kilometre mark, as a data frame with columns
   \code{time_min}, \code{dist_km}, \code{lon}, and \code{lat}),
   \code{duration_min} (estimated cycling time in minutes), and
   \code{distance_km} (total route length in kilometres).
@@ -28,9 +31,10 @@ Plan a cycling route between two coordinates
 \details{
 Uses the public OSRM routing API with the cycling profile to find
   the route. Coordinates should be standard decimal latitude and longitude
-  (e.g. \code{52.3731, 4.8922}). Estimated positions along the route are
-  calculated by assuming a constant cycling speed and interpolating between
-  waypoints using the Haversine formula.
+  (e.g. \code{52.3731, 4.8922}). Travel time is estimated from the
+  Haversine route distance divided by \code{speed_kmh}, independent of the
+  OSRM duration. Estimated positions along the route are calculated by
+  assuming constant speed and interpolating between waypoints.
 }
 \examples{
 bikeroute(52.3731, 4.8922, 52.3579, 4.8686)

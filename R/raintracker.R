@@ -75,8 +75,6 @@ fetch_rain_forecast <- function(lat, lon) {
 #'   repeating until the full route is clear. If no dry window is found within
 #'   24 hours, \code{suggested_departure} is returned as \code{NA}.
 #'
-#'   Because the forecast resolution is 15 minutes, suggested departure times
-#'   are rounded to the nearest 15 minutes.
 #'
 #' @examples
 #' route <- bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
