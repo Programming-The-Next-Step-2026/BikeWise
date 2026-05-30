@@ -49,7 +49,7 @@ test_that("load_local_users returns correct columns on first call", {
   )
   result <- load_local_users()
   expect_s3_class(result, "data.frame")
-  expect_named(result, c("username", "password_hash", "rain_preference"))
+  expect_named(result, c("username", "password_hash", "rain_preference", "cycling_speed"))
 })
 
 # Test that the CSV file is written to disk on the first call

@@ -31,12 +31,18 @@ load_local_users <- function() {
     empty <- data.frame(
       username        = character(),
       password_hash   = character(),
-      rain_preference = character()
+      rain_preference = character(),
+      cycling_speed   = numeric()
     )
     write.csv(empty, path, row.names = FALSE)
     return(empty)
   }
-  read.csv(path)
+  users <- read.csv(path)
+  # add cycling_speed column if missing — handles existing installs
+  if (!"cycling_speed" %in% names(users)) {
+    users$cycling_speed <- NA_real_
+  }
+  users
 }
 
 # Read the locations CSV; if it does not exist yet,

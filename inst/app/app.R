@@ -330,7 +330,7 @@ route_ui <- function(route_data) {
 
 
 # settings_ui so that the user can update their preferences and locations
-settings_ui <- function(saved_labels) {
+settings_ui <- function(saved_labels, saved_speed) {
   tagList(
     fluidRow(column(12, align = "center",
     h2("Settings"),
@@ -449,6 +449,26 @@ settings_ui <- function(saved_labels) {
     ),
     br(),
 
+    # section 3: let user update their cycling speed
+    fluidRow(column(12, align = "center",
+      h4("Your cycling speed"),
+      p("How fast do you usually cycle?")
+    )),
+
+    fluidRow(column(12, align = "center",
+      numericInput("settings_speed_input",
+                   label = NULL,
+                   value = if (!is.na(saved_speed) &&
+                               length(saved_speed) > 0) saved_speed else 15,
+                   min = 1, max = 100, step = 1,
+                   width = "120px"),
+      p(style = "color: grey; font-size: 0.85em;", "km/h — default is 15"),
+      actionButton("settings_speed_save",
+                   tagList(icon("save"), " Save speed"),
+                   width = "50%")
+    )),
+    br(),
+
     # back button — returns to previous page
     fluidRow(column(12, align = "center",
       actionButton("settings_back_btn", tagList(icon("arrow-left"), " Back"))
@@ -475,8 +495,9 @@ server <- function(input, output, session) {
   pending_label <- reactiveVal(NULL)
 
   # remember which page the user came from before opening settings
-  previous_page    <- reactiveVal(NULL)
+  previous_page     <- reactiveVal(NULL)
   tolerance_version <- reactiveVal(0)
+  speed_version     <- reactiveVal(0)
 
 
 
@@ -496,7 +517,8 @@ server <- function(input, output, session) {
              get_locations(current_user(), example = TRUE)$label
            ),
            settings = settings_ui(
-             get_locations(current_user(), example = TRUE)$label
+             get_locations(current_user(), example = TRUE)$label,
+             cycling_speed(current_user(), example = TRUE)
            ),
            route = route_ui(route_data()),
            h2("Unknown page")
@@ -1178,6 +1200,20 @@ server <- function(input, output, session) {
     ))
   })
 
+  # save cycling speed — validate input, persist, and invalidate speed cache
+  observeEvent(input$settings_speed_save, {
+    speed <- input$settings_speed_input
+    if (is.na(speed) || speed < 1 || speed > 100) {
+      showNotification("Please enter a speed between 1 and 100 km/h.",
+                       type = "warning", duration = 4)
+      return()
+    }
+    cycling_speed(current_user(), speed, example = TRUE) # save speed
+    speed_version(speed_version() + 1)                  # invalidate speed cache
+    showNotification("Cycling speed saved!", type = "message", duration = 2)
+  })
+
+
   # settings tolerance buttons — update tolerance and stay on settings
   observeEvent(input$settings_tol_none, {
     rain_preference(current_user(), "none", example = TRUE)
@@ -1209,13 +1245,22 @@ server <- function(input, output, session) {
     rain_preference(current_user(), example = TRUE)
   })
 
+  # load user's cycling speed — falls back to 15 km/h if not yet set
+  user_speed <- reactive({
+    speed_version()
+    req(current_user())
+    s <- cycling_speed(current_user(), example = TRUE)
+    if (length(s) == 0 || is.na(s)) 15 else s
+  })
+
 
   # call bikeroute when both start and end are set
   route_data <- reactive({
     req(from_coords(), to_coords()) # only run if both set
     tryCatch(
       bikeroute(from_coords()$lat, from_coords()$lon,
-                to_coords()$lat, to_coords()$lon),
+                to_coords()$lat, to_coords()$lon,
+                speed_kmh = user_speed()),
       error = function(e) {
         showNotification("Could not calculate route. Please try again.",
                          type = "error", duration = 5)

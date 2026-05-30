@@ -36,7 +36,8 @@ authenticate_user <- function(username, password, example = FALSE) {
       new_row <- data.frame(
         username        = username,
         password_hash   = hash,
-        rain_preference = NA_character_
+        rain_preference = NA_character_,
+        cycling_speed   = NA_real_
       )
       write.csv(rbind(users, new_row), local_users_path(), row.names = FALSE)
       return("created")
@@ -56,7 +57,8 @@ authenticate_user <- function(username, password, example = FALSE) {
       new_row <- data.frame(
         username        = username,
         password_hash   = hash,
-        rain_preference = NA_character_
+        rain_preference = NA_character_,
+        cycling_speed   = NA_real_
       )
       write_sheet(rbind(users, new_row), ss = sheet_id(), sheet = "users")
       return("created")
