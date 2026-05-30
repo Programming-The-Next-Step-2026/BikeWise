@@ -321,7 +321,7 @@ route_ui <- function(route_data) {
     # note pinned to bottom of page
     div(
       style = "position: fixed; bottom: 20px; width: 100%; text-align: center;",
-      p(em("Note: cycling times assume a constant pace and may vary with terrain and wind."))
+      p(em("Note: cycling times assume a constant pace and may vary with terrain and wind.")) # nolint: line_length_linter
     )
 
 
@@ -507,7 +507,7 @@ server <- function(input, output, session) {
     # change screen based on current_page()
     switch(current_page(),
            login = login_ui(),
-           rain_preference = rain_tolerance_ui(),
+           rain_tolerance = rain_tolerance_ui(),
            # fetch fresh locations to reflect newly saved ones
            pick_start = pick_start_ui(
              get_locations(current_user(), example = TRUE)$label
@@ -540,7 +540,7 @@ server <- function(input, output, session) {
            # let new users indicate their rain tolerance
            created = {
              current_user(input$username)
-             current_page("rain_preference")
+             current_page("rain_tolerance")
            },
 
            # switch to new UI; let user choose startpoint
@@ -560,22 +560,22 @@ server <- function(input, output, session) {
 
   # change screen after rain tolerance was indicated
   observeEvent(input$tol_none, {
-    rain_preference(current_user(), "none", example = TRUE) # save tolerance
+    rain_tolerance(current_user(), "none", example = TRUE) # save tolerance
     current_page("pick_start")                              # go to next page
   })
 
   observeEvent(input$tol_light, {
-    rain_preference(current_user(), "light", example = TRUE)
+    rain_tolerance(current_user(), "light", example = TRUE)
     current_page("pick_start")
   })
 
   observeEvent(input$tol_moderate, {
-    rain_preference(current_user(), "moderate", example = TRUE)
+    rain_tolerance(current_user(), "moderate", example = TRUE)
     current_page("pick_start")
   })
 
   observeEvent(input$tol_heavy, {
-    rain_preference(current_user(), "heavy", example = TRUE)
+    rain_tolerance(current_user(), "heavy", example = TRUE)
     current_page("pick_start")
   })
 
@@ -1216,22 +1216,22 @@ server <- function(input, output, session) {
 
   # settings tolerance buttons — update tolerance and stay on settings
   observeEvent(input$settings_tol_none, {
-    rain_preference(current_user(), "none", example = TRUE)
+    rain_tolerance(current_user(), "none", example = TRUE)
     tolerance_version(tolerance_version() + 1) # invalidate tolerance cache
   })
 
   observeEvent(input$settings_tol_light, {
-    rain_preference(current_user(), "light", example = TRUE)
+    rain_tolerance(current_user(), "light", example = TRUE)
     tolerance_version(tolerance_version() + 1)
   })
 
   observeEvent(input$settings_tol_moderate, {
-    rain_preference(current_user(), "moderate", example = TRUE)
+    rain_tolerance(current_user(), "moderate", example = TRUE)
     tolerance_version(tolerance_version() + 1)
   })
 
   observeEvent(input$settings_tol_heavy, {
-    rain_preference(current_user(), "heavy", example = TRUE)
+    rain_tolerance(current_user(), "heavy", example = TRUE)
     tolerance_version(tolerance_version() + 1)
   })
 
@@ -1242,7 +1242,7 @@ server <- function(input, output, session) {
   tolerance <- reactive({
     tolerance_version()
     req(current_user())
-    rain_preference(current_user(), example = TRUE)
+    rain_tolerance(current_user(), example = TRUE)
   })
 
   # load user's cycling speed — falls back to 15 km/h if not yet set
@@ -1295,8 +1295,10 @@ server <- function(input, output, session) {
       return(h3("Built different. Just ride."))
     }
 
-    # save rain result for user
-    req(rain_result())
+    if (is.null(rain_result())) {
+      return(p("Could not load weather data. Please try again.",
+               style = "color: gray;"))
+    }
     result <- rain_result()
 
     # pick message based on rain result
@@ -1320,9 +1322,10 @@ server <- function(input, output, session) {
   })
 
 
-  # render rain plot — plot_rain handles NULL data internally
+  # render rain plot — always renders; blank axes if API failed
   output$rain_plot <- renderPlot({
-    req(rain_result())
+    req(route_data(), tolerance())
+    if (is.null(rain_result())) return(invisible(NULL))
     plot_rain(rain_result()$route_rain_summary, tolerance())
   })
 

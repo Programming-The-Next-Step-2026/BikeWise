@@ -23,6 +23,7 @@ Imports:
     googlesheets4,
     digest,
     ggplot2,
+    openssl,
     shiny,
     tools
 Suggests:

@@ -4,12 +4,7 @@
 \alias{raintracker}
 \title{Check whether it is safe to cycle now, or suggest when to leave}
 \usage{
-raintracker(
-  timed_df,
-  start_time,
-  check_interval_km = 1,
-  threshold = "moderate"
-)
+raintracker(timed_df, start_time, threshold = "moderate")
 }
 \arguments{
 \item{timed_df}{Timed position data for your route, as returned in the
@@ -17,10 +12,6 @@ raintracker(
 
 \item{start_time}{When you plan to leave. Either a POSIXct datetime or a
 character string (e.g. \code{"2026-05-16 08:00"}).}
-
-\item{check_interval_km}{How far apart (in km) to check the weather along
-the route. Smaller values are more thorough but use more API calls.
-Defaults to 1 km.}
 
 \item{threshold}{How much rain is too much to cycle in. One of
 \code{"light"}, \code{"moderate"}, or \code{"heavy"}. Defaults to
@@ -32,9 +23,9 @@ A named list with three elements: \code{safe_to_go} (TRUE if the
   \code{suggested_departure} (when to leave as a POSIXct, or NA if no dry
   window was found today), and \code{route_rain_summary} (a data frame with
   columns \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
-  \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, only
-  included when \code{safe_to_go} is TRUE and at least some rain was
-  detected below the threshold).
+  \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, showing
+  conditions at \code{suggested_departure} when safe, or at
+  \code{start_time} when no dry window was found).
 }
 \description{
 Check whether it is safe to cycle now, or suggest when to leave

@@ -7,7 +7,7 @@
 fake_users <- data.frame(
   username        = "alice",
   password_hash   = digest::digest("secret", algo = "sha256"),
-  rain_preference = "moderate",
+  rain_tolerance = "moderate",
   cycling_speed   = NA_real_
 )
 

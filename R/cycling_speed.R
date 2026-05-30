@@ -4,7 +4,7 @@
 #' @param speed_kmh If provided, updates the stored speed to this value (km/h).
 #'   If omitted, the current speed is returned.
 #' @param example If \code{TRUE}, reads and writes a local CSV file instead of
-#'   Google Sheets. Used automatically by \code{run_example()}.
+#'   Google Sheets. Used automatically by \code{StartCyclingOnline()}.
 #'
 #' @return The current speed as a numeric when called without \code{speed_kmh}.
 #'   Called with \code{speed_kmh}, updates the value and returns \code{NULL}
@@ -39,11 +39,13 @@ cycling_speed <- function(username, speed_kmh = NULL, example = FALSE) {
     users <- read_sheet(sheet_id(), sheet = "users")
 
     if (is.null(speed_kmh)) {
-      # return current speed
-      users$cycling_speed[users$username == username]
+      # decrypt and return current speed as numeric
+      stored <- users$cycling_speed[users$username == username]
+      as.numeric(decrypt_value(as.character(stored)))
     } else {
-      # update speed and write back to sheet
-      users$cycling_speed[users$username == username] <- speed_kmh
+      # encrypt and write back to sheet
+      users$cycling_speed[users$username == username] <-
+        encrypt_value(speed_kmh)
       write_sheet(users, ss = sheet_id(), sheet = "users")
       invisible(NULL)
     }

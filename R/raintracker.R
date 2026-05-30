@@ -52,9 +52,6 @@ fetch_rain_forecast <- function(lat, lon) {
 #'   \code{timed_coords} element of \code{bikeroute()}.
 #' @param start_time When you plan to leave. Either a POSIXct datetime or a
 #'   character string (e.g. \code{"2026-05-16 08:00"}).
-#' @param check_interval_km How far apart (in km) to check the weather along
-#'   the route. Smaller values are more thorough but use more API calls.
-#'   Defaults to 1 km.
 #' @param threshold How much rain is too much to cycle in. One of
 #'   \code{"light"}, \code{"moderate"}, or \code{"heavy"}. Defaults to
 #'   \code{"moderate"}.
@@ -63,9 +60,9 @@ fetch_rain_forecast <- function(lat, lon) {
 #'   \code{suggested_departure} (when to leave as a POSIXct, or NA if no dry
 #'   window was found today), and \code{route_rain_summary} (a data frame with
 #'   columns \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
-#'   \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, only
-#'   included when \code{safe_to_go} is TRUE and at least some rain was
-#'   detected below the threshold).
+#'   \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, showing
+#'   conditions at \code{suggested_departure} when safe, or at
+#'   \code{start_time} when no dry window was found).
 #'
 #' @details Checks the weather at regular intervals along your route using the
 #'   free Open-Meteo API (no key required), which provides 15-minute
@@ -84,12 +81,14 @@ fetch_rain_forecast <- function(lat, lon) {
 #' @export
 raintracker <- function(timed_df,
                         start_time,
-                        check_interval_km = 1,
                         threshold = "moderate") {
 
   if (!inherits(start_time, "POSIXct")) {
     start_time <- as.POSIXct(start_time, tz = Sys.timezone())
   }
+
+  # Scale interval to route length, targeting ~30 checkpoints; floor at 1 km
+  check_interval_km <- max(1, max(timed_df$dist_km) / 30)
 
   # Build checkpoints: rows closest to each km multiple of check_interval_km,
   # always including the first and last row of timed_df
@@ -110,6 +109,18 @@ raintracker <- function(timed_df,
   forecasts <- lapply(seq_len(nrow(checkpoints)), function(i) {
     fetch_rain_forecast(checkpoints$lat[i], checkpoints$lon[i])
   })
+
+  # Snapshot of rain at start_time — used for the plot regardless of retry outcome
+  initial_summary <- do.call(rbind, lapply(seq_len(nrow(checkpoints)), function(i) {
+    cp       <- checkpoints[i, ]
+    abs_time <- start_time + cp$time_min * 60
+    forecast <- forecasts[[i]]
+    diffs    <- abs(as.numeric(difftime(forecast$time, abs_time, units = "secs")))
+    mm_h     <- forecast$mm_h[which.min(diffs)]
+    data.frame(time_min  = cp$time_min, dist_km   = cp$dist_km,
+               lon       = cp$lon,      lat       = cp$lat,
+               rain_mm_h = round(mm_h, 2), rain_level = classify_rain(mm_h))
+  }))
 
   current_start <- start_time
 
@@ -169,7 +180,7 @@ raintracker <- function(timed_df,
           return(list(
             safe_to_go          = FALSE,
             suggested_departure = NA,
-            route_rain_summary  = NULL
+            route_rain_summary  = initial_summary
           ))
         }
         # Restart checkpoint loop with updated departure time
@@ -179,12 +190,10 @@ raintracker <- function(timed_df,
 
     if (!rain_found) {
       # Full route is clear at current_start
-      summary_df <- do.call(rbind, severity_log)
-      has_rain   <- any(summary_df$rain_level != "none")
       return(list(
         safe_to_go          = TRUE,
         suggested_departure = current_start,
-        route_rain_summary  = if (has_rain) summary_df else NULL
+        route_rain_summary  = do.call(rbind, severity_log)
       ))
     }
   }

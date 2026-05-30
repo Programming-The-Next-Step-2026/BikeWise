@@ -128,3 +128,48 @@ test_that("get_locations only returns rows for the requested user (example)", {
   expect_equal(nrow(result), 1)
   expect_true(all(result$user == "bob"))
 })
+
+# ── Encryption (Google Sheets backend) ───────────────────────────────────────
+
+test_that("get_locations decrypts all fields returned from the sheet", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
+  encrypted_locs <- data.frame(
+    user         = "alice",
+    label        = encrypt_value("home"),
+    address      = encrypt_value("Dam Square"),
+    lat          = encrypt_value(52.37),
+    lon          = encrypt_value(4.89),
+    display_name = encrypt_value("Home"),
+    stringsAsFactors = FALSE
+  )
+  local_mocked_bindings(
+    sheet_id   = function() "dummy",
+    read_sheet = function(...) encrypted_locs,
+    .package   = "BikeWise"
+  )
+  result <- get_locations("alice", "home")
+  expect_equal(result$lat, 52.37)
+  expect_equal(result$lon, 4.89)
+})
+
+test_that("get_locations returns decrypted data frame for all user rows", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
+  encrypted_locs <- data.frame(
+    user         = c("alice", "alice"),
+    label        = c(encrypt_value("home"), encrypt_value("work")),
+    address      = c(encrypt_value("Addr A"), encrypt_value("Addr B")),
+    lat          = c(encrypt_value(52.30), encrypt_value(52.40)),
+    lon          = c(encrypt_value(4.80), encrypt_value(4.90)),
+    display_name = c(encrypt_value("Home"), encrypt_value("Work")),
+    stringsAsFactors = FALSE
+  )
+  local_mocked_bindings(
+    sheet_id   = function() "dummy",
+    read_sheet = function(...) encrypted_locs,
+    .package   = "BikeWise"
+  )
+  result <- get_locations("alice")
+  expect_equal(nrow(result), 2)
+  expect_equal(sort(result$label), c("home", "work"))
+  expect_type(result$lat, "double")
+})

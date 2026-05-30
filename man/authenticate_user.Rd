@@ -12,7 +12,7 @@ authenticate_user(username, password, example = FALSE)
 \item{password}{A plain-text password.}
 
 \item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
-Google Sheets. Used automatically by \code{run_example()}.}
+Google Sheets. Used automatically by \code{StartCyclingOnline()}.}
 }
 \value{
 One of three character strings: \code{"created"} (new account made),

@@ -42,7 +42,7 @@ geocode <- function(address) {
 #' @param display_name Optional display name for the location card. Only used
 #'   when \code{label} is \code{"custom1"} or \code{"custom2"}.
 #' @param example If \code{TRUE}, reads and writes a local CSV file instead of
-#'   Google Sheets. Used automatically by \code{run_example()}.
+#'   Google Sheets. Used automatically by \code{StartCyclingOnline()}.
 #'
 #' @return The saved coordinates as a named list with \code{lat} and
 #'   \code{lon}.
@@ -94,10 +94,24 @@ save_location <- function(user, label, address, display_name = NULL,
 
   } else {
 
-    # load from sheet and remove any existing row for this label
+    # load from sheet; decrypt labels to find any existing row to overwrite
     existing <- read_sheet(sheet_id(), sheet = "locations")
-    existing <- existing[!(existing$user == user & existing$label == label), ]
-    write_sheet(rbind(existing, new_row), ss = sheet_id(), sheet = "locations")
+    existing_labels <- vapply(
+      as.character(existing$label), decrypt_value, character(1)
+    )
+    existing <- existing[
+      !(existing$user == user & existing_labels == label), ]
+    # encrypt sensitive fields before writing
+    new_row_enc <- data.frame(
+      user         = user,
+      label        = encrypt_value(label),
+      address      = encrypt_value(address),
+      lat          = encrypt_value(coords$lat),
+      lon          = encrypt_value(coords$lon),
+      display_name = encrypt_value(as.character(display_name))
+    )
+    write_sheet(rbind(existing, new_row_enc),
+                ss = sheet_id(), sheet = "locations")
 
   }
 

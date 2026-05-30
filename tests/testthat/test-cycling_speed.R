@@ -7,7 +7,7 @@
 fake_users <- data.frame(
   username        = c("alice", "bob"),
   password_hash   = c("somehash", "otherhash"),
-  rain_preference = c("moderate", NA_character_),
+  rain_tolerance = c("moderate", NA_character_),
   cycling_speed   = c(20, NA_real_)
 )
 
@@ -140,10 +140,50 @@ test_that("load_local_users adds cycling_speed column to old CSVs", {
   old_users <- data.frame(
     username        = "alice",
     password_hash   = "somehash",
-    rain_preference = "moderate"
+    rain_tolerance = "moderate"
   )
   write.csv(old_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
   result <- load_local_users()
   expect_true("cycling_speed" %in% names(result))
   expect_true(is.na(result$cycling_speed[result$username == "alice"]))
+})
+
+# ── Encryption (Google Sheets backend) ───────────────────────────────────────
+
+test_that("cycling_speed getter decrypts and returns numeric from sheet", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
+  encrypted_users <- data.frame(
+    username       = "alice",
+    password_hash  = "somehash",
+    rain_tolerance = "moderate",
+    cycling_speed  = encrypt_value(20)
+  )
+  local_mocked_bindings(
+    sheet_id   = function() "dummy",
+    read_sheet = function(...) encrypted_users,
+    .package   = "BikeWise"
+  )
+  result <- cycling_speed("alice")
+  expect_equal(result, 20)
+  expect_type(result, "double")
+})
+
+test_that("cycling_speed setter encrypts value before writing to sheet", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
+  written <- NULL
+  local_mocked_bindings(
+    sheet_id    = function() "dummy",
+    read_sheet  = function(...) fake_users,
+    write_sheet = function(data, ...) {
+      written <<- data
+      invisible(NULL)
+    },
+    .package    = "BikeWise"
+  )
+  cycling_speed("alice", speed_kmh = 25)
+  stored <- as.character(
+    written$cycling_speed[written$username == "alice"]
+  )
+  expect_false(stored == "25")
+  expect_equal(as.numeric(decrypt_value(stored)), 25)
 })

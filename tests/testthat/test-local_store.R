@@ -49,7 +49,9 @@ test_that("load_local_users returns correct columns on first call", {
   )
   result <- load_local_users()
   expect_s3_class(result, "data.frame")
-  expect_named(result, c("username", "password_hash", "rain_preference", "cycling_speed"))
+  expected_cols <- c("username", "password_hash", "rain_tolerance",
+                     "cycling_speed")
+  expect_named(result, expected_cols)
 })
 
 # Test that the CSV file is written to disk on the first call
@@ -85,4 +87,27 @@ test_that("load_local_locations creates the CSV file on first call", {
   )
   load_local_locations()
   expect_true(file.exists(file.path(tmp, "example_locations.csv")))
+})
+
+# ── Migration ─────────────────────────────────────────────────────────────────
+
+# Test that load_local_users renames the old rain_preference column to
+# rain_tolerance for existing installs that pre-date the rename
+test_that("load_local_users migrates rain_preference column to rain_tolerance",
+{
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(
+    R_user_dir = function(...) tmp,
+    .package = "BikeWise"
+  )
+  old_users <- data.frame(
+    username        = "alice",
+    password_hash   = "somehash",
+    rain_preference = "moderate"
+  )
+  write.csv(old_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
+  result <- load_local_users()
+  expect_true("rain_tolerance" %in% names(result))
+  expect_false("rain_preference" %in% names(result))
+  expect_equal(result$rain_tolerance[result$username == "alice"], "moderate")
 })

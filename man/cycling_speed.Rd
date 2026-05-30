@@ -13,7 +13,7 @@ cycling_speed(username, speed_kmh = NULL, example = FALSE)
 If omitted, the current speed is returned.}
 
 \item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
-Google Sheets. Used automatically by \code{run_example()}.}
+Google Sheets. Used automatically by \code{StartCyclingOnline()}.}
 }
 \value{
 The current speed as a numeric when called without \code{speed_kmh}.

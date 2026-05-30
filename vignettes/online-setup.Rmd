@@ -1,0 +1,157 @@
+---
+title: "Running BikeWise Online with Google Sheets"
+author: "SebKrbs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Running BikeWise Online with Google Sheets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+```
+
+## Overview
+
+BikeWise has two modes:
+
+- **Offline** (`StartCycling()`): data is stored in local CSV files on your
+  machine. Works immediately with no setup.
+- **Online** (`StartCyclingOnline()`): data is stored in a Google Sheet. All
+  sensitive data is encrypted before it reaches the sheet, so even if someone
+  finds the sheet they cannot read the data.
+
+This vignette walks through the three steps needed to get the online version
+running.
+
+---
+
+## What you will need
+
+Three environment variables in your `~/.Renviron` file:
+
+| Variable | What it is |
+|---|---|
+| `BIKEWISE_SHEET_ID` | The ID of your Google Sheet |
+| `BIKEWISE_SERVICE_ACCOUNT` | Path to a service account JSON key |
+| `BIKEWISE_ENCRYPTION_KEY` | A secret string used to encrypt data |
+
+Open `.Renviron` with:
+
+```r
+usethis::edit_r_environ()
+```
+
+---
+
+## Step 1 — Create your Google Sheet
+
+1. Go to [sheets.google.com](https://sheets.google.com) and create a new
+   spreadsheet.
+
+2. Create two tabs named **exactly** `users` and `locations` (case-sensitive).
+
+3. In the `users` tab, add these column headers in row 1:
+
+   ```
+   username   password_hash   rain_tolerance   cycling_speed
+   ```
+
+4. In the `locations` tab, add these column headers in row 1:
+
+   ```
+   user   label   address   lat   lon   display_name
+   ```
+
+5. Copy the sheet ID from the URL —
+   `docs.google.com/spreadsheets/d/`**`THIS_PART`**`/edit`.
+
+6. Add to `.Renviron`:
+
+   ```
+   BIKEWISE_SHEET_ID=paste-your-id-here
+   ```
+
+---
+
+## Step 2 — Create a service account
+
+A service account is a separate Google "robot" account that the app uses to
+read and write your sheet. It has access only to the sheets you share with it
+— not to your personal Google Drive.
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) and
+   sign in with your Google account.
+
+2. Click the project dropdown at the top and select **New Project**. Give it
+   a name (e.g. `BikeWise`) and click **Create**.
+
+3. In the search bar, type `Google Sheets API` and click **Enable**.
+
+4. In the left sidebar go to **IAM & Admin → Service Accounts**. Click
+   **+ Create Service Account**, name it (e.g. `bikewise-app`), and click
+   **Done**.
+
+5. Click the service account you just created, go to the **Keys** tab, click
+   **Add Key → Create new key**, choose **JSON**, and click **Create**. A
+   `.json` file will download to your computer.
+
+   > **Important:** Never commit this file to git. Add `*.json` to your
+   > `.gitignore` to be safe.
+
+6. Open your Google Sheet, click **Share** (top right), and paste in the
+   service account email address. It looks like
+   `bikewise-app@your-project.iam.gserviceaccount.com` and is visible on the
+   service accounts page. Give it **Editor** access and click **Send**.
+
+7. Add to `.Renviron`:
+
+   ```
+   BIKEWISE_SERVICE_ACCOUNT=/path/to/downloaded-key.json
+   ```
+
+---
+
+## Step 3 — Set an encryption key
+
+Generate a random key by running this in R:
+
+```r
+paste(sample(c(letters, LETTERS, 0:9), 32, replace = TRUE), collapse = "")
+```
+
+Copy the output and add it to `.Renviron`:
+
+```
+BIKEWISE_ENCRYPTION_KEY=your-random-key-here
+```
+
+Save `.Renviron` and restart R.
+
+---
+
+## Running the app
+
+```r
+library(BikeWise)
+StartCyclingOnline()
+```
+
+BikeWise will verify all three variables are set, authenticate with Google
+Sheets using the service account, and open the app in your browser.
+
+---
+
+## Deploying to shinyapps.io
+
+Set all three variables in your app dashboard under
+**Settings → Environment Variables**.
+
+For `BIKEWISE_SERVICE_ACCOUNT`, paste the **full contents** of the JSON file
+as the value (not the file path). It starts with `{` — just open the file in
+a text editor, select all, and paste it in. The authentication library
+detects automatically that it is a JSON string rather than a file path.

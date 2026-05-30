@@ -104,7 +104,9 @@ test_that("raintracker returns safe_to_go TRUE on a fully dry route", {
   result <- raintracker(timed_df, start_time)
   expect_true(result$safe_to_go)
   expect_s3_class(result$suggested_departure, "POSIXct")
-  expect_null(result$route_rain_summary)
+  # route_rain_summary is always a data frame — all levels "none" when dry
+  expect_s3_class(result$route_rain_summary, "data.frame")
+  expect_true(all(result$route_rain_summary$rain_level == "none"))
 })
 
 # Test that a rain summary is included when there is light rain along the route
@@ -148,4 +150,59 @@ test_that("raintracker returns NA departure when no dry window exists", {
   result <- raintracker(timed_df, start_time)
   expect_false(result$safe_to_go)
   expect_true(is.na(result$suggested_departure))
+})
+
+# Test that route_rain_summary is always returned, even when no dry window
+test_that("raintracker always returns route_rain_summary as a data frame", {
+  local_mocked_bindings(
+    fetch_rain_forecast = make_forecast(15),
+    .package = "BikeWise"
+  )
+  result <- raintracker(timed_df, start_time)
+  expect_s3_class(result$route_rain_summary, "data.frame")
+  expect_named(result$route_rain_summary,
+               c("time_min", "dist_km", "lon", "lat",
+                 "rain_mm_h", "rain_level"))
+})
+
+# Test that route_rain_summary for no-dry-window case reflects start_time
+# conditions (initial summary), not a shifted future time
+test_that("raintracker no-dry-window summary shows heavy rain at start_time", {
+  local_mocked_bindings(
+    fetch_rain_forecast = make_forecast(15),
+    .package = "BikeWise"
+  )
+  result <- raintracker(timed_df, start_time)
+  expect_true(all(result$route_rain_summary$rain_level == "heavy"))
+})
+
+# Test that check_interval_km scales to keep checkpoints near 30 for long routes
+test_that("raintracker uses fewer checkpoints for a long route", {
+  long_route <- data.frame(
+    time_min = seq(0, 240, length.out = 100),
+    dist_km  = seq(0, 60,  length.out = 100),
+    lon      = rep(4.89, 100),
+    lat      = rep(52.37, 100)
+  )
+  local_mocked_bindings(
+    fetch_rain_forecast = make_forecast(0),
+    .package = "BikeWise"
+  )
+  result <- raintracker(long_route, start_time)
+  # 60km / 30 target = 2km interval -> ~31 checkpoints
+  n <- nrow(result$route_rain_summary)
+  expect_gte(n, 25)
+  expect_lte(n, 35)
+})
+
+# Test that short routes stay at the 1 km floor
+test_that("raintracker uses 1 km floor for routes shorter than 30 km", {
+  short_route <- timed_df  # 3 km
+  local_mocked_bindings(
+    fetch_rain_forecast = make_forecast(0),
+    .package = "BikeWise"
+  )
+  result <- raintracker(short_route, start_time)
+  # 3km at 1km intervals = 4 checkpoints (0, 1, 2, 3 + final row)
+  expect_lte(nrow(result$route_rain_summary), 6)
 })

@@ -55,13 +55,15 @@ write_user <- function(username, password, pref = "moderate") {
   users <- if (file.exists(users_csv)) {
     read.csv(users_csv)
   } else {
-    data.frame(username        = character(),
-               password_hash   = character(),
-               rain_preference = character())
+    data.frame(username       = character(),
+               password_hash  = character(),
+               rain_tolerance = character(),
+               cycling_speed  = numeric())
   }
   write.csv(
     rbind(users, data.frame(username = username, password_hash = hash,
-                            rain_preference = pref)),
+                            rain_tolerance = pref,
+                            cycling_speed = NA_real_)),
     users_csv, row.names = FALSE
   )
 }
@@ -166,7 +168,7 @@ test_that("selecting rain tolerance navigates to pick_start screen", {
   )
   on.exit(app$stop(), add = TRUE)
 
-  # Log in as a new user — lands on rain_preference
+  # Log in as a new user — lands on rain_tolerance
   app$set_inputs(username = test_user("t"), password = "pass")
   app$click("login_btn")
   app$wait_for_idle()

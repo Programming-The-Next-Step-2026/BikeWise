@@ -2,7 +2,7 @@
 % Please edit documentation in R/StartCycling.R
 \name{StartCycling}
 \alias{StartCycling}
-\title{Launch the BikeWise Shiny app}
+\title{Launch the BikeWise app in offline mode}
 \usage{
 StartCycling()
 }
@@ -10,10 +10,10 @@ StartCycling()
 Called for its side effect; returns \code{NULL} invisibly.
 }
 \description{
-Opens the BikeWise app in your default browser. User accounts and saved
-locations are stored in local CSV files on your machine — no Google account
-is required. An internet connection is needed for the weather forecast and
-route planning APIs.
+Opens the BikeWise app in your default browser using local CSV files for
+data storage. No Google account or environment variables are required.
+An internet connection is still needed for the weather forecast and route
+planning APIs.
 }
 \examples{
 \dontrun{

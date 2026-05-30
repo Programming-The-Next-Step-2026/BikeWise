@@ -321,7 +321,7 @@ route_ui <- function(route_data) {
     # note pinned to bottom of page
     div(
       style = "position: fixed; bottom: 20px; width: 100%; text-align: center;",
-      p(em("Note: cycling times assume a constant pace and may vary with terrain and wind."))
+      p(em("Note: cycling times assume a constant pace and may vary with terrain and wind.")) # nolint: line_length_linter
     )
 
 
@@ -507,18 +507,18 @@ server <- function(input, output, session) {
     # change screen based on current_page()
     switch(current_page(),
            login = login_ui(),
-           rain_preference = rain_tolerance_ui(),
+           rain_tolerance = rain_tolerance_ui(),
            # fetch fresh locations to reflect newly saved ones
            pick_start = pick_start_ui(
-             get_locations(current_user(), example = TRUE)$label
+             get_locations(current_user())$label
            ),
            # same here, ensures green cards show up after saving on pick_start
            pick_end = pick_end_ui(
-             get_locations(current_user(), example = TRUE)$label
+             get_locations(current_user())$label
            ),
            settings = settings_ui(
-             get_locations(current_user(), example = TRUE)$label,
-             cycling_speed(current_user(), example = TRUE)
+             get_locations(current_user())$label,
+             cycling_speed(current_user())
            ),
            route = route_ui(route_data()),
            h2("Unknown page")
@@ -531,8 +531,7 @@ server <- function(input, output, session) {
 
     # store if user is authenticated based on provided credentials
     result <- authenticate_user(input$username,
-                                input$password,
-                                example = TRUE)
+                                input$password)
 
     # act depending on the result of authentication
     switch(result,
@@ -540,7 +539,7 @@ server <- function(input, output, session) {
            # let new users indicate their rain tolerance
            created = {
              current_user(input$username)
-             current_page("rain_preference")
+             current_page("rain_tolerance")
            },
 
            # switch to new UI; let user choose startpoint
@@ -560,22 +559,22 @@ server <- function(input, output, session) {
 
   # change screen after rain tolerance was indicated
   observeEvent(input$tol_none, {
-    rain_preference(current_user(), "none", example = TRUE) # save tolerance
+    rain_tolerance(current_user(), "none") # save tolerance
     current_page("pick_start")                              # go to next page
   })
 
   observeEvent(input$tol_light, {
-    rain_preference(current_user(), "light", example = TRUE)
+    rain_tolerance(current_user(), "light")
     current_page("pick_start")
   })
 
   observeEvent(input$tol_moderate, {
-    rain_preference(current_user(), "moderate", example = TRUE)
+    rain_tolerance(current_user(), "moderate")
     current_page("pick_start")
   })
 
   observeEvent(input$tol_heavy, {
-    rain_preference(current_user(), "heavy", example = TRUE)
+    rain_tolerance(current_user(), "heavy")
     current_page("pick_start")
   })
 
@@ -584,8 +583,8 @@ server <- function(input, output, session) {
   observeEvent(input$from_home, {
 
     # if saved, use stored coordinates
-    if ("home" %in% get_locations(current_user(), example = TRUE)$label) {
-      locs <- get_locations(current_user(), example = TRUE)
+    if ("home" %in% get_locations(current_user())$label) {
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "home", ]
       from_coords(list(lat = match$lat[1], lon = match$lon[1], label = "home"))
       current_page("pick_end")
@@ -613,8 +612,8 @@ server <- function(input, output, session) {
 
   # check if "work" is in saved locations
   observeEvent(input$from_work, {
-    if ("work" %in% get_locations(current_user(), example = TRUE)$label) {
-      locs <- get_locations(current_user(), example = TRUE)
+    if ("work" %in% get_locations(current_user())$label) {
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "work", ]
       from_coords(list(lat = match$lat[1], lon = match$lon[1], label = "work"))
       current_page("pick_end")
@@ -636,8 +635,8 @@ server <- function(input, output, session) {
 
   # check if "education" is in saved locations
   observeEvent(input$from_education, {
-    if ("education" %in% get_locations(current_user(), example = TRUE)$label) {
-      locs <- get_locations(current_user(), example = TRUE)
+    if ("education" %in% get_locations(current_user())$label) {
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "education", ]
       from_coords(list(
         lat = match$lat[1], lon = match$lon[1], label = "education"
@@ -661,8 +660,8 @@ server <- function(input, output, session) {
 
   # check if "friends" is in saved locations
   observeEvent(input$from_friends, {
-    if ("friends" %in% get_locations(current_user(), example = TRUE)$label) {
-      locs <- get_locations(current_user(), example = TRUE)
+    if ("friends" %in% get_locations(current_user())$label) {
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "friends", ]
       from_coords(list(
         lat = match$lat[1], lon = match$lon[1], label = "friends"
@@ -686,8 +685,8 @@ server <- function(input, output, session) {
 
   # check if "sports" is in saved locations
   observeEvent(input$from_sports, {
-    if ("sports" %in% get_locations(current_user(), example = TRUE)$label) {
-      locs <- get_locations(current_user(), example = TRUE)
+    if ("sports" %in% get_locations(current_user())$label) {
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "sports", ]
       from_coords(list(
         lat = match$lat[1], lon = match$lon[1], label = "sports"
@@ -711,8 +710,8 @@ server <- function(input, output, session) {
 
   # check if "music" is in saved locations
   observeEvent(input$from_music, {
-    if ("music" %in% get_locations(current_user(), example = TRUE)$label) {
-      locs <- get_locations(current_user(), example = TRUE)
+    if ("music" %in% get_locations(current_user())$label) {
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "music", ]
       from_coords(list(lat = match$lat[1], lon = match$lon[1], label = "music"))
       current_page("pick_end")
@@ -734,8 +733,8 @@ server <- function(input, output, session) {
 
   # check if "custom1" is in saved locations
   observeEvent(input$from_custom1, {
-    if ("custom1" %in% get_locations(current_user(), example = TRUE)$label) {
-      locs <- get_locations(current_user(), example = TRUE)
+    if ("custom1" %in% get_locations(current_user())$label) {
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "custom1", ]
       from_coords(list(
         lat = match$lat[1], lon = match$lon[1], label = "custom1"
@@ -759,8 +758,8 @@ server <- function(input, output, session) {
 
   # check if "custom2" is in saved locations
   observeEvent(input$from_custom2, {
-    if ("custom2" %in% get_locations(current_user(), example = TRUE)$label) {
-      locs <- get_locations(current_user(), example = TRUE)
+    if ("custom2" %in% get_locations(current_user())$label) {
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "custom2", ]
       from_coords(list(
         lat = match$lat[1], lon = match$lon[1], label = "custom2"
@@ -788,8 +787,7 @@ server <- function(input, output, session) {
 
     # call coords, but make sure to give warning if address unavailable
     coords <- tryCatch(
-      save_location(current_user(), pending_label(), input$new_address,
-                    example = TRUE),
+      save_location(current_user(), pending_label(), input$new_address),
       error = function(e) {
         showNotification("Address not found. Please try a different address.",
                          type = "error", duration = 5)
@@ -842,7 +840,7 @@ server <- function(input, output, session) {
 
   # to_* location buttons — same logic as from_* but stores to to_coords
   observeEvent(input$to_home, {
-    if ("home" %in% get_locations(current_user(), example = TRUE)$label) {
+    if ("home" %in% get_locations(current_user())$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "home") {
         showNotification(
@@ -851,7 +849,7 @@ server <- function(input, output, session) {
         )
         return()
       }
-      locs <- get_locations(current_user(), example = TRUE)
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "home", ]
       to_coords(list(lat = match$lat[1], lon = match$lon[1], label = "home"))
       current_page("route")
@@ -872,7 +870,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$to_work, {
-    if ("work" %in% get_locations(current_user(), example = TRUE)$label) {
+    if ("work" %in% get_locations(current_user())$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "work") {
         showNotification(
@@ -881,7 +879,7 @@ server <- function(input, output, session) {
         )
         return()
       }
-      locs <- get_locations(current_user(), example = TRUE)
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "work", ]
       to_coords(list(lat = match$lat[1], lon = match$lon[1], label = "work"))
       current_page("route")
@@ -902,7 +900,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$to_education, {
-    if ("education" %in% get_locations(current_user(), example = TRUE)$label) {
+    if ("education" %in% get_locations(current_user())$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "education") {
         showNotification(
@@ -911,7 +909,7 @@ server <- function(input, output, session) {
         )
         return()
       }
-      locs <- get_locations(current_user(), example = TRUE)
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "education", ]
       to_coords(list(
         lat = match$lat[1], lon = match$lon[1], label = "education"
@@ -934,7 +932,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$to_friends, {
-    if ("friends" %in% get_locations(current_user(), example = TRUE)$label) {
+    if ("friends" %in% get_locations(current_user())$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "friends") {
         showNotification(
@@ -943,7 +941,7 @@ server <- function(input, output, session) {
         )
         return()
       }
-      locs <- get_locations(current_user(), example = TRUE)
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "friends", ]
       to_coords(list(lat = match$lat[1], lon = match$lon[1], label = "friends"))
       current_page("route")
@@ -964,7 +962,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$to_sports, {
-    if ("sports" %in% get_locations(current_user(), example = TRUE)$label) {
+    if ("sports" %in% get_locations(current_user())$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "sports") {
         showNotification(
@@ -973,7 +971,7 @@ server <- function(input, output, session) {
         )
         return()
       }
-      locs <- get_locations(current_user(), example = TRUE)
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "sports", ]
       to_coords(list(lat = match$lat[1], lon = match$lon[1], label = "sports"))
       current_page("route")
@@ -994,7 +992,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$to_music, {
-    if ("music" %in% get_locations(current_user(), example = TRUE)$label) {
+    if ("music" %in% get_locations(current_user())$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "music") {
         showNotification(
@@ -1003,7 +1001,7 @@ server <- function(input, output, session) {
         )
         return()
       }
-      locs <- get_locations(current_user(), example = TRUE)
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "music", ]
       to_coords(list(lat = match$lat[1], lon = match$lon[1], label = "music"))
       current_page("route")
@@ -1024,7 +1022,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$to_custom1, {
-    if ("custom1" %in% get_locations(current_user(), example = TRUE)$label) {
+    if ("custom1" %in% get_locations(current_user())$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "custom1") {
         showNotification(
@@ -1033,7 +1031,7 @@ server <- function(input, output, session) {
         )
         return()
       }
-      locs <- get_locations(current_user(), example = TRUE)
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "custom1", ]
       to_coords(list(lat = match$lat[1], lon = match$lon[1], label = "custom1"))
       current_page("route")
@@ -1054,7 +1052,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$to_custom2, {
-    if ("custom2" %in% get_locations(current_user(), example = TRUE)$label) {
+    if ("custom2" %in% get_locations(current_user())$label) {
       # prevent routing from and to the same location
       if (!is.null(from_coords()) && from_coords()$label == "custom2") {
         showNotification(
@@ -1063,7 +1061,7 @@ server <- function(input, output, session) {
         )
         return()
       }
-      locs <- get_locations(current_user(), example = TRUE)
+      locs <- get_locations(current_user())
       match <- locs[locs$label == "custom2", ]
       to_coords(list(lat = match$lat[1], lon = match$lon[1], label = "custom2"))
       current_page("route")
@@ -1208,7 +1206,7 @@ server <- function(input, output, session) {
                        type = "warning", duration = 4)
       return()
     }
-    cycling_speed(current_user(), speed, example = TRUE) # save speed
+    cycling_speed(current_user(), speed) # save speed
     speed_version(speed_version() + 1)                  # invalidate speed cache
     showNotification("Cycling speed saved!", type = "message", duration = 2)
   })
@@ -1216,22 +1214,22 @@ server <- function(input, output, session) {
 
   # settings tolerance buttons — update tolerance and stay on settings
   observeEvent(input$settings_tol_none, {
-    rain_preference(current_user(), "none", example = TRUE)
+    rain_tolerance(current_user(), "none")
     tolerance_version(tolerance_version() + 1) # invalidate tolerance cache
   })
 
   observeEvent(input$settings_tol_light, {
-    rain_preference(current_user(), "light", example = TRUE)
+    rain_tolerance(current_user(), "light")
     tolerance_version(tolerance_version() + 1)
   })
 
   observeEvent(input$settings_tol_moderate, {
-    rain_preference(current_user(), "moderate", example = TRUE)
+    rain_tolerance(current_user(), "moderate")
     tolerance_version(tolerance_version() + 1)
   })
 
   observeEvent(input$settings_tol_heavy, {
-    rain_preference(current_user(), "heavy", example = TRUE)
+    rain_tolerance(current_user(), "heavy")
     tolerance_version(tolerance_version() + 1)
   })
 
@@ -1242,14 +1240,14 @@ server <- function(input, output, session) {
   tolerance <- reactive({
     tolerance_version()
     req(current_user())
-    rain_preference(current_user(), example = TRUE)
+    rain_tolerance(current_user())
   })
 
   # load user's cycling speed — falls back to 15 km/h if not yet set
   user_speed <- reactive({
     speed_version()
     req(current_user())
-    s <- cycling_speed(current_user(), example = TRUE)
+    s <- cycling_speed(current_user())
     if (length(s) == 0 || is.na(s)) 15 else s
   })
 
@@ -1295,8 +1293,10 @@ server <- function(input, output, session) {
       return(h3("Built different. Just ride."))
     }
 
-    # save rain result for user
-    req(rain_result())
+    if (is.null(rain_result())) {
+      return(p("Could not load weather data. Please try again.",
+               style = "color: gray;"))
+    }
     result <- rain_result()
 
     # pick message based on rain result
@@ -1320,9 +1320,10 @@ server <- function(input, output, session) {
   })
 
 
-  # render rain plot — plot_rain handles NULL data internally
+  # render rain plot — always renders; blank if API failed
   output$rain_plot <- renderPlot({
-    req(rain_result())
+    req(route_data(), tolerance())
+    if (is.null(rain_result())) return(invisible(NULL))
     plot_rain(rain_result()$route_rain_summary, tolerance())
   })
 

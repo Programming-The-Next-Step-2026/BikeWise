@@ -7,7 +7,7 @@
 #' @param username A username string.
 #' @param password A plain-text password.
 #' @param example If \code{TRUE}, reads and writes a local CSV file instead of
-#'   Google Sheets. Used automatically by \code{run_example()}.
+#'   Google Sheets. Used automatically by \code{StartCyclingOnline()}.
 #'
 #' @return One of three character strings: \code{"created"} (new account made),
 #'   \code{"authenticated"} (existing user, correct password), or
@@ -36,7 +36,7 @@ authenticate_user <- function(username, password, example = FALSE) {
       new_row <- data.frame(
         username        = username,
         password_hash   = hash,
-        rain_preference = NA_character_,
+        rain_tolerance = NA_character_,
         cycling_speed   = NA_real_
       )
       write.csv(rbind(users, new_row), local_users_path(), row.names = FALSE)
@@ -57,7 +57,7 @@ authenticate_user <- function(username, password, example = FALSE) {
       new_row <- data.frame(
         username        = username,
         password_hash   = hash,
-        rain_preference = NA_character_,
+        rain_tolerance = NA_character_,
         cycling_speed   = NA_real_
       )
       write_sheet(rbind(users, new_row), ss = sheet_id(), sheet = "users")

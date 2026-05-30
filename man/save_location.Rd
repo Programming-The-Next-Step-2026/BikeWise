@@ -20,7 +20,7 @@ Geocoded automatically — no coordinates needed.}
 when \code{label} is \code{"custom1"} or \code{"custom2"}.}
 
 \item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
-Google Sheets. Used automatically by \code{run_example()}.}
+Google Sheets. Used automatically by \code{StartCyclingOnline()}.}
 }
 \value{
 The saved coordinates as a named list with \code{lat} and

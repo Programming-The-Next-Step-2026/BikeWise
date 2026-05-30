@@ -181,3 +181,59 @@ test_that("save_location writes geocoded coordinates to the CSV (example)", {
   expect_equal(new_row$lat, 51.50)
   expect_equal(new_row$lon, -0.12)
 })
+
+# ── Encryption (Google Sheets backend) ───────────────────────────────────────
+
+test_that("save_location encrypts sensitive fields before writing to sheet", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
+  written <- NULL
+  local_mocked_bindings(
+    sheet_id    = function() "dummy",
+    geocode     = function(address) list(lat = 52.37, lon = 4.89),
+    read_sheet  = function(...) data.frame(
+      user = character(), label = character(), address = character(),
+      lat = numeric(), lon = numeric(), display_name = character()
+    ),
+    write_sheet = function(data, ...) {
+      written <<- data
+      invisible(NULL)
+    },
+    .package    = "BikeWise"
+  )
+  save_location("alice", "home", "Dam Square")
+  expect_false(written$label == "home")
+  expect_false(written$address == "Dam Square")
+  expect_equal(decrypt_value(written$label), "home")
+  expect_equal(as.numeric(decrypt_value(as.character(written$lat))), 52.37)
+})
+
+test_that("save_location deduplicates correctly when labels are encrypted", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
+  encrypted_existing <- data.frame(
+    user         = "alice",
+    label        = encrypt_value("home"),
+    address      = encrypt_value("Old Street"),
+    lat          = encrypt_value(52.30),
+    lon          = encrypt_value(4.80),
+    display_name = encrypt_value("Home"),
+    stringsAsFactors = FALSE
+  )
+  written <- NULL
+  local_mocked_bindings(
+    sheet_id    = function() "dummy",
+    geocode     = function(address) list(lat = 52.37, lon = 4.89),
+    read_sheet  = function(...) encrypted_existing,
+    write_sheet = function(data, ...) {
+      written <<- data
+      invisible(NULL)
+    },
+    .package    = "BikeWise"
+  )
+  save_location("alice", "home", "New Street")
+  decrypted_labels <- vapply(
+    as.character(written$label), decrypt_value, character(1)
+  )
+  expect_equal(
+    sum(written$user == "alice" & decrypted_labels == "home"), 1
+  )
+})
