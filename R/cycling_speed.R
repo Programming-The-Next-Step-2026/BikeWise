@@ -17,7 +17,7 @@
 #' }
 #'
 #' @importFrom googlesheets4 read_sheet write_sheet
-#' @noRd
+#' @export
 cycling_speed <- function(username, speed_kmh = NULL, example = FALSE) {
 
   if (example) {

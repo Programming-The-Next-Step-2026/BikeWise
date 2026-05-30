@@ -23,7 +23,7 @@
 #' }
 #'
 #' @importFrom googlesheets4 read_sheet
-#' @noRd
+#' @export
 get_locations <- function(user, label = NULL, example = FALSE) {
 
   # read from local CSV or Google Sheet depending on mode

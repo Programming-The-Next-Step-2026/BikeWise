@@ -1,11 +1,11 @@
 # Convert mm/h to named rain severity using Buienradar thresholds
 #' @noRd
 classify_rain <- function(mm_h) {
-  if (mm_h < RAIN_THRESHOLDS[["none"]]) {
+  if (mm_h < rain_thresholds[["none"]]) {
     "none"
-  } else if (mm_h < RAIN_THRESHOLDS[["light"]]) {
+  } else if (mm_h < rain_thresholds[["light"]]) {
     "light"
-  } else if (mm_h <= RAIN_THRESHOLDS[["moderate"]]) {
+  } else if (mm_h <= rain_thresholds[["moderate"]]) {
     "moderate"
   } else {
     "heavy"

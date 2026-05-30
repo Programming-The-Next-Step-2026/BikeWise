@@ -20,7 +20,7 @@
 #' @importFrom ggplot2 ggplot aes geom_area geom_line geom_hline labs
 #' @importFrom ggplot2 scale_y_continuous coord_cartesian theme_classic
 #' @importFrom ggplot2 theme_void
-#' @noRd
+#' @export
 plot_rain <- function(route_rain_summary, tolerance = "moderate") {
 
   # return blank plot if no rain data
@@ -33,7 +33,7 @@ plot_rain <- function(route_rain_summary, tolerance = "moderate") {
     geom_area(fill = "steelblue", alpha = 0.4) +
     geom_line(color = "steelblue") +
     scale_y_continuous(
-      breaks = c(0, RAIN_THRESHOLDS[["light"]], RAIN_THRESHOLDS[["moderate"]]),
+      breaks = c(0, rain_thresholds[["light"]], rain_thresholds[["moderate"]]),
       labels = c("None", "Light", "Moderate")
     ) +
     coord_cartesian(ylim = c(0, 12)) +
@@ -42,7 +42,7 @@ plot_rain <- function(route_rain_summary, tolerance = "moderate") {
 
   # heavy tolerance users ride through anything — no threshold line
   if (tolerance != "heavy") {
-    p <- p + geom_hline(yintercept = RAIN_THRESHOLDS[[tolerance]],
+    p <- p + geom_hline(yintercept = rain_thresholds[[tolerance]],
                         color = "red", linetype = "dashed", linewidth = 0.8)
   }
 

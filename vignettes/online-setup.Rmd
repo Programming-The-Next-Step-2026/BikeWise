@@ -164,7 +164,7 @@ Sheets using the service account, and open the app in your browser.
 
    ```r
    rsconnect::deployApp(
-     appDir = system.file("shiny-examples/bikewise", package = "BikeWise")
+     appDir = system.file("apps/bikewise-online", package = "BikeWise")
    )
    ```
 

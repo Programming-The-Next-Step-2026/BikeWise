@@ -18,7 +18,7 @@
 #' }
 #'
 #' @importFrom googlesheets4 read_sheet write_sheet
-#' @noRd
+#' @export
 rain_tolerance <- function(username, tolerance = NULL, example = FALSE) {
 
   if (example) {

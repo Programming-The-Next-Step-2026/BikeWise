@@ -1,6 +1,7 @@
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-PRESET_TITLES <- c(
+#' @export
+preset_titles <- c(
   home      = "Home",
   work      = "Work",
   education = "Education",
@@ -11,8 +12,20 @@ PRESET_TITLES <- c(
   custom2   = "Custom 2"
 )
 
-# mm/h value at which each tolerance level is breached
-RAIN_THRESHOLDS <- c(none = 0.1, light = 2.5, moderate = 10)
+#' @export
+preset_icons <- c(
+  home      = "home",
+  work      = "briefcase",
+  education = "graduation-cap",
+  friends   = "users",
+  sports    = "running",
+  music     = "music",
+  custom1   = "pencil",
+  custom2   = "pencil"
+)
+
+#' @noRd
+rain_thresholds <- c(none = 0.1, light = 2.5, moderate = 10)
 
 # ── Google Sheets backend ─────────────────────────────────────────────────────
 

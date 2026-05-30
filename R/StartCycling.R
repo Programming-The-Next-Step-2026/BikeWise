@@ -15,5 +15,5 @@
 #' @importFrom shiny runApp
 #' @export
 StartCycling <- function() {
-  runApp(system.file("app", package = "BikeWise"))
+  runApp(system.file("apps/bikewise-local", package = "BikeWise"))
 }

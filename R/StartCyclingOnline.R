@@ -44,5 +44,5 @@ StartCyclingOnline <- function() {
   # authenticate with Google Sheets using service account
   gs4_auth(path = Sys.getenv("BIKEWISE_SERVICE_ACCOUNT"))
 
-  runApp(system.file("shiny-examples/bikewise", package = "BikeWise"))
+  runApp(system.file("apps/bikewise-online", package = "BikeWise"))
 }
