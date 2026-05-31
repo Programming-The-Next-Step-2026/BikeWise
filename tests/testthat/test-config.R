@@ -1,4 +1,4 @@
-# Tests for encrypt_value() and decrypt_value() in config.R.
+# Tests for encrypt_value(), decrypt_value(), and sheet_id() in config.R.
 # withr::local_envvar() sets a temporary key for each test so the real
 # environment is never modified.
 
@@ -67,4 +67,47 @@ test_that("decrypt_value with wrong key does not return the original", {
   ct <- encrypt_value("moderate")
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "key-B")
   expect_error(decrypt_value(ct))
+})
+
+# ── sheet_id ──────────────────────────────────────────────────────────────────
+
+test_that("sheet_id returns the env var value when set", {
+  withr::local_envvar(BIKEWISE_SHEET_ID = "my-sheet-id")
+  expect_equal(sheet_id(), "my-sheet-id")
+})
+
+test_that("sheet_id stops when BIKEWISE_SHEET_ID is not set", {
+  withr::local_envvar(BIKEWISE_SHEET_ID = "")
+  expect_error(sheet_id(), "BIKEWISE_SHEET_ID is not set")
+})
+
+# ── load_local_users migrations ───────────────────────────────────────────────
+
+test_that("load_local_users renames rain_preference to rain_tolerance", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  old <- data.frame(
+    username        = "alice",
+    password_hash   = "abc",
+    rain_preference = "moderate",
+    cycling_speed   = NA_real_
+  )
+  write.csv(old, file.path(tmp, "example_users.csv"), row.names = FALSE)
+  users <- load_local_users()
+  expect_true("rain_tolerance" %in% names(users))
+  expect_false("rain_preference" %in% names(users))
+})
+
+test_that("load_local_users adds cycling_speed when column is missing", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  old <- data.frame(
+    username       = "alice",
+    password_hash  = "abc",
+    rain_tolerance = "moderate"
+  )
+  write.csv(old, file.path(tmp, "example_users.csv"), row.names = FALSE)
+  users <- load_local_users()
+  expect_true("cycling_speed" %in% names(users))
+  expect_true(is.na(users$cycling_speed))
 })
