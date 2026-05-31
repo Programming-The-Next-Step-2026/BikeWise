@@ -11,35 +11,36 @@ fake_summary <- data.frame(
   rain_level = c("light", "light", "light")
 )
 
-# Test that a valid summary produces a ggplot object
 test_that("plot_rain returns a ggplot object for valid input", {
   p <- plot_rain(fake_summary)
   expect_s3_class(p, "gg")
 })
 
-# Test that NULL input returns a blank ggplot rather than an error
 test_that("plot_rain returns a ggplot object when route_rain_summary is NULL", {
   p <- plot_rain(NULL)
   expect_s3_class(p, "gg")
 })
 
-# Test that a threshold line is drawn for non-heavy tolerances
 test_that("plot_rain adds a threshold line for non-heavy tolerance", {
   p <- plot_rain(fake_summary, tolerance = "moderate")
   layer_classes <- sapply(p$layers, function(l) class(l$geom)[1])
   expect_true("GeomHline" %in% layer_classes)
 })
 
-# Test that no threshold line is drawn when the user cycles in any weather
 test_that("plot_rain omits the threshold line for heavy tolerance", {
   p <- plot_rain(fake_summary, tolerance = "heavy")
   layer_classes <- sapply(p$layers, function(l) class(l$geom)[1])
   expect_false("GeomHline" %in% layer_classes)
 })
 
-# Test that light tolerance also gets a threshold line
 test_that("plot_rain adds a threshold line for light tolerance", {
   p <- plot_rain(fake_summary, tolerance = "light")
   layer_classes <- sapply(p$layers, function(l) class(l$geom)[1])
   expect_true("GeomHline" %in% layer_classes)
+})
+
+test_that("plot_rain sets the threshold line at the correct rain level", {
+  p <- plot_rain(fake_summary, tolerance = "light")
+  hline <- Filter(function(l) class(l$geom)[1] == "GeomHline", p$layers)[[1]]
+  expect_equal(hline$aes_params$yintercept, rain_thresholds[["light"]])
 })
