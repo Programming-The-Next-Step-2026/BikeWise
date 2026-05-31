@@ -19,6 +19,15 @@ After selecting your start and destination, BikeWise gives one of:
 - **No dry window today. Grab a raincoat** — no dry window in today's forecast
 - **Built different. Just ride.** — for users who cycle in any weather
 
+## Use BikeWise online
+
+No installation needed — BikeWise is live at:
+
+**https://sebkrbs.shinyapps.io/bikewise/**
+
+Create a personal account to save your locations and rain tolerance. Your
+profile is accessible from any device, anywhere — just log in and go.
+
 ## Installation
 
 ```r
