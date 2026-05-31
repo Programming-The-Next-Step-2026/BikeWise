@@ -5,15 +5,14 @@
 
 # A fake users table — one user with a speed set, one without
 fake_users <- data.frame(
-  username        = c("alice", "bob"),
-  password_hash   = c("somehash", "otherhash"),
+  username       = c("alice", "bob"),
+  password_hash  = c("somehash", "otherhash"),
   rain_tolerance = c("moderate", NA_character_),
-  cycling_speed   = c(20, NA_real_)
+  cycling_speed  = c(20, NA_real_)
 )
 
 # ── Google Sheets backend (example = FALSE) ───────────────────────────────────
 
-# Test that the getter returns whatever speed is stored in the sheet
 test_that("cycling_speed returns stored speed without a value arg", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
@@ -24,7 +23,6 @@ test_that("cycling_speed returns stored speed without a value arg", {
   expect_equal(cycling_speed("alice"), 20)
 })
 
-# Test that the getter returns NA for a user with no speed saved
 test_that("cycling_speed returns NA when no speed has been saved", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
@@ -35,7 +33,6 @@ test_that("cycling_speed returns NA when no speed has been saved", {
   expect_true(is.na(cycling_speed("bob")))
 })
 
-# Test that the setter writes the updated speed back to the sheet
 test_that("cycling_speed updates the sheet when called with a new value", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   written <- NULL
@@ -52,7 +49,6 @@ test_that("cycling_speed updates the sheet when called with a new value", {
   expect_equal(written$cycling_speed[written$username == "alice"], 25)
 })
 
-# Test that the setter only updates the right user's speed
 test_that("cycling_speed only updates the target user", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   written <- NULL
@@ -69,7 +65,6 @@ test_that("cycling_speed only updates the target user", {
   expect_true(is.na(written$cycling_speed[written$username == "bob"]))
 })
 
-# Test that the setter returns NULL invisibly
 test_that("cycling_speed returns NULL invisibly when setting a speed", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
@@ -84,7 +79,6 @@ test_that("cycling_speed returns NULL invisibly when setting a speed", {
 
 # ── Local CSV backend (example = TRUE) ───────────────────────────────────────
 
-# Test that the getter returns the stored speed from CSV
 test_that("cycling_speed returns stored speed from CSV (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
@@ -95,7 +89,6 @@ test_that("cycling_speed returns stored speed from CSV (example)", {
   expect_equal(cycling_speed("alice", example = TRUE), 20)
 })
 
-# Test that the getter returns NA for a user with no speed saved
 test_that("cycling_speed returns NA from CSV when no speed set (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
@@ -106,7 +99,6 @@ test_that("cycling_speed returns NA from CSV when no speed set (example)", {
   expect_true(is.na(cycling_speed("bob", example = TRUE)))
 })
 
-# Test that the setter writes the updated speed to the CSV
 test_that("cycling_speed writes updated speed to CSV (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
@@ -119,7 +111,18 @@ test_that("cycling_speed writes updated speed to CSV (example)", {
   expect_equal(written$cycling_speed[written$username == "alice"], 25)
 })
 
-# Test that the setter returns NULL invisibly
+test_that("cycling_speed only updates the target user in CSV (example)", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(
+    R_user_dir = function(...) tmp,
+    .package = "BikeWise"
+  )
+  write.csv(fake_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
+  cycling_speed("alice", speed_kmh = 25, example = TRUE)
+  written <- read.csv(file.path(tmp, "example_users.csv"))
+  expect_true(is.na(written$cycling_speed[written$username == "bob"]))
+})
+
 test_that("cycling_speed setter returns NULL invisibly (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
@@ -133,18 +136,15 @@ test_that("cycling_speed setter returns NULL invisibly (example)", {
 
 # ── Migration ─────────────────────────────────────────────────────────────────
 
-# Test that load_local_users adds cycling_speed column when it is missing
-# (handles existing installs that pre-date this column)
 test_that("load_local_users adds cycling_speed column to old CSVs", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
     R_user_dir = function(...) tmp,
     .package = "BikeWise"
   )
-  # write a legacy CSV without cycling_speed
   old_users <- data.frame(
-    username        = "alice",
-    password_hash   = "somehash",
+    username       = "alice",
+    password_hash  = "somehash",
     rain_tolerance = "moderate"
   )
   write.csv(old_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
