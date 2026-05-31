@@ -18,7 +18,7 @@ preset_titles <- c(
   custom2   = "Custom 2"
 )
 
-# rain intensity thresholds in mm/h
+# rain intensity thresholds in mm/h — approximate Buienradar classification
 #' @noRd
 rain_thresholds <- c(none = 0.1, light = 2.5, moderate = 10)
 
