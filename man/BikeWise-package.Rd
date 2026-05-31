@@ -8,6 +8,14 @@
 \description{
 Plans a cycling route between two locations and checks the weather along the way to suggest the safest time to leave. Helps cyclists avoid rain by finding the next dry departure window within a 24-hour forecast.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/sebkrbs/BikeWise}
+  \item Report bugs at \url{https://github.com/sebkrbs/BikeWise/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Sebastian Krebs \email{sebasti.k24@gmail.com}
 

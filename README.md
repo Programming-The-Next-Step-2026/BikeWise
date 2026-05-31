@@ -1,24 +1,56 @@
 # BikeWise
-A decision-support tool that helps students optimize study time and cycling commute windows based on real-time weather forecasts.
 
-BikeWise uses weather data along a user’s cycling route (e.g., from Uni to Home) to determine whether it is better to leave immediately and “pedal now” to avoid rain, or stay longer and “lock in” for another productive study session.
+> Cycle safely. Arrive dry.
 
-Users can save frequently used locations such as Home, Uni, Work, Family, and Friends for future use. Additionally, users can define their personal minimum “lock-in” duration (i.e., the minimum amount of uninterrupted time needed for a productive study session).
+BikeWise is an R package that helps cyclists decide when to leave. It plans
+a cycling route between two locations, checks the weather forecast at
+checkpoints along the way, and finds the earliest rain-free departure window
+within the next 24 hours.
 
-After selecting a current location and destination, BikeWise provides one of several recommendations:
+Your personal rain tolerance (none / light / moderate / heavy) determines
+what counts as "dry enough" for your ride.
 
-->  Pedal now! - if the route is currently dry and can be completed before rainfall begins.
-  
-->  Lock in! - if it is currently raining, but the estimated time until the rain stops exceeds the user’s minimum productive study duration.
-  
-->  Take a break! - if it is raining, but not long enough to justify starting another focused study session.
-  
-->  Better take the metro! - if rain persists until late evening.
+## Recommendations
 
-The application also provides an estimated safe departure time indicating when users can likely leave without encountering rain during their ride.
+After selecting your start and destination, BikeWise gives one of:
 
+- **You're good to go!** — the route looks dry right now
+- **Leave at HH:MM for a dry ride.** — a dry window is coming; leave then
+- **No dry window today. Grab a raincoat** — no dry window in today's forecast
+- **Built different. Just ride.** — for users who cycle in any weather
 
-# Additional Tools
-Open-Meteo API (https://open-meteo.com) for weather forecasts
+## Installation
 
-OSRM API (https://project-osrm.org) for cycling routes
+```r
+# install.packages("devtools")
+devtools::install_github("sebkrbs/BikeWise")
+```
+
+## Quickstart
+
+**Local mode** — no account or internet setup needed, stores data in local
+CSV files:
+
+```r
+library(BikeWise)
+StartCycling()
+```
+
+**Online mode** — stores data in Google Sheets, supports multiple devices.
+Requires a one-time setup (see `vignette("online-setup", package = "BikeWise")`):
+
+```r
+library(BikeWise)
+StartCyclingOnline()
+```
+
+## APIs
+
+BikeWise uses three free, open APIs — no keys required:
+
+- [Open-Meteo](https://open-meteo.com) — 15-minute precipitation forecasts
+  over a 24-hour window
+- [OSRM](https://project-osrm.org) — cycling route geometry and travel time
+- [Nominatim](https://nominatim.org) — address geocoding via OpenStreetMap
+
+An internet connection is required to fetch routes and weather data.

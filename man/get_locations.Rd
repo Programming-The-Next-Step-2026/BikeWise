@@ -7,22 +7,23 @@
 get_locations(user, example = FALSE)
 }
 \arguments{
-\item{user}{A username string identifying the user.}
+\item{user}{A character string identifying the user account.}
 
 \item{example}{If \code{TRUE}, reads from a local CSV file instead of
-Google Sheets. Used automatically by \code{StartCyclingOnline()}.}
+Google Sheets. Used automatically by \code{StartCycling()}.}
 }
 \value{
 A data frame with columns \code{user}, \code{label},
   \code{address}, \code{lat}, and \code{lon}.
 }
 \description{
-Get saved locations for a user
+Returns the saved location records for a user from the backend store.
+On the Google Sheets backend, all fields are decrypted before returning.
 }
 \examples{
 \dontrun{
-googlesheets4::gs4_auth()
-get_locations("alice")
+# returns all saved locations for the user
+get_locations("alice", example = TRUE)
 }
 
 }

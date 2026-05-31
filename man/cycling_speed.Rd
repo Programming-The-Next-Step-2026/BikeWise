@@ -7,13 +7,13 @@
 cycling_speed(username, speed_kmh = NULL, example = FALSE)
 }
 \arguments{
-\item{username}{A username string.}
+\item{username}{A character string identifying the user account.}
 
 \item{speed_kmh}{If provided, updates the stored speed to this value (km/h).
 If omitted, the current speed is returned.}
 
 \item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
-Google Sheets. Used automatically by \code{StartCyclingOnline()}.}
+Google Sheets. Used automatically by \code{StartCycling()}.}
 }
 \value{
 The current speed as a numeric when called without \code{speed_kmh}.
@@ -21,12 +21,16 @@ The current speed as a numeric when called without \code{speed_kmh}.
   invisibly. Returns \code{NA} if no speed has been saved yet.
 }
 \description{
-Get or set the cycling speed preference for a user
+Retrieves or updates the cycling speed stored for a user. The speed is
+used to estimate route travel time in \code{\link{bikeroute}}.
 }
 \examples{
 \dontrun{
-cycling_speed("alice")
-cycling_speed("alice", 20)
+# get stored speed (returns NA if not yet set)
+cycling_speed("alice", example = TRUE)
+
+# set speed to 20 km/h
+cycling_speed("alice", speed_kmh = 20, example = TRUE)
 }
 
 }

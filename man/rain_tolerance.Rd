@@ -7,7 +7,7 @@
 rain_tolerance(username, tolerance = NULL, example = FALSE)
 }
 \arguments{
-\item{username}{A username string.}
+\item{username}{A character string identifying the user account.}
 
 \item{tolerance}{If provided, updates the stored tolerance to this value.
 One of \code{"none"}, \code{"light"}, \code{"moderate"}, or
@@ -18,16 +18,22 @@ Google Sheets. Used automatically by \code{StartCycling()}.}
 }
 \value{
 The current tolerance as a character string when called without
-  \code{tolerance}. Called with \code{tolerance}, updates the value and
-  returns \code{NULL} invisibly.
+  \code{tolerance}. Returns \code{NA} if no tolerance has been saved yet.
+  Called with \code{tolerance}, updates the value and returns \code{NULL}
+  invisibly.
 }
 \description{
-Get or set the rain tolerance for a user
+Retrieves or updates the rain tolerance stored for a user. The tolerance
+controls whether a rain-free departure window is sought by
+\code{\link{raintracker}}.
 }
 \examples{
 \dontrun{
-rain_tolerance("alice")
-rain_tolerance("alice", "moderate")
+# get stored tolerance (returns NA if not yet set)
+rain_tolerance("alice", example = TRUE)
+
+# set tolerance to moderate
+rain_tolerance("alice", "moderate", example = TRUE)
 }
 
 }

@@ -8,25 +8,27 @@ plot_rain(route_rain_summary, tolerance = "moderate")
 }
 \arguments{
 \item{route_rain_summary}{A data frame as returned in the
-\code{route_rain_summary} element of \code{raintracker()}.}
+\code{route_rain_summary} element of \code{\link{raintracker}}.}
 
 \item{tolerance}{The user's rain tolerance: one of \code{"none"},
-\code{"light"}, \code{"moderate"}, or \code{"heavy"}. Draws a red
-threshold line at the corresponding rain level.}
+\code{"light"}, \code{"moderate"}, or \code{"heavy"}. A red dashed
+threshold line is drawn at the corresponding intensity; no line is
+drawn for \code{"heavy"}.}
 }
 \value{
-A ggplot object showing rain intensity over distance, with a red
-  line marking the user's tolerance threshold. Returns a blank plot when
-  \code{route_rain_summary} is \code{NULL}.
+A ggplot object showing rain intensity over distance. Returns a
+  blank plot when \code{route_rain_summary} is \code{NULL}.
 }
 \description{
-Plot rain intensity along a route
+Produces a ggplot2 area chart of rain intensity (mm/h) over cycling
+distance. The y-axis is anchored to the defined severity thresholds, and
+a red dashed line marks the user's tolerance level.
 }
 \examples{
 \dontrun{
 route <- bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
 result <- raintracker(route$timed_coords, Sys.time())
-plot_rain(result$route_rain_summary)
+plot_rain(result$route_rain_summary, tolerance = "moderate")
 }
 
 }

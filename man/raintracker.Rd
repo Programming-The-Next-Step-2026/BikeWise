@@ -14,8 +14,8 @@ raintracker(timed_df, start_time, threshold = "moderate")
 character string (e.g. \code{"2026-05-16 08:00"}).}
 
 \item{threshold}{How much rain is too much to cycle in. One of
-\code{"light"}, \code{"moderate"}, or \code{"heavy"}. Defaults to
-\code{"moderate"}.}
+\code{"none"}, \code{"light"}, \code{"moderate"}, or \code{"heavy"}.
+Defaults to \code{"moderate"}.}
 }
 \value{
 A named list with three elements: \code{safe_to_go} (TRUE if the
@@ -28,19 +28,24 @@ A named list with three elements: \code{safe_to_go} (TRUE if the
   \code{start_time} when no dry window was found).
 }
 \description{
-Check whether it is safe to cycle now, or suggest when to leave
+Checks weather at regular intervals along the route and finds the earliest
+rain-free departure window within the next 24 hours.
 }
 \details{
 Checks the weather at regular intervals along your route using the
   free Open-Meteo API (no key required), which provides 15-minute
-  precipitation forecasts over a 24-hour window. If rain is too heavy
-  somewhere along the route, the function works out when the rain clears at
-  that spot and shifts the suggested departure time forward accordingly,
-  repeating until the full route is clear. If no dry window is found within
-  24 hours, \code{suggested_departure} is returned as \code{NA}.
+  precipitation forecasts over a 24-hour window. Rain severity is classified
+  using approximate Buienradar thresholds (none < 0.1, light < 2.5,
+  moderate \eqn{\leq} 10, heavy > 10 mm/h), chosen because they are
+  familiar to Dutch cyclists. If rain is too heavy somewhere along the
+  route, the function shifts the suggested departure forward until the full
+  route is clear. If no dry window is found within 24 hours,
+  \code{suggested_departure} is returned as \code{NA}.
 }
 \examples{
+\donttest{
 route <- bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
 raintracker(route$timed_coords, start_time = Sys.time())
+}
 
 }

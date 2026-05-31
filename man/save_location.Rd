@@ -7,34 +7,33 @@
 save_location(user, label, address, example = FALSE)
 }
 \arguments{
-\item{user}{A username string identifying the user.}
+\item{user}{A character string identifying the user account.}
 
-\item{label}{The name of the location. One of the preset labels
-(\code{"home"}, \code{"work"}, etc.) or \code{"custom1"} /
-\code{"custom2"} for user-defined locations.}
+\item{label}{The name of the location. One of \code{"home"},
+\code{"work"}, \code{"education"}, \code{"friends"}, \code{"sports"},
+\code{"music"}, \code{"custom1"}, or \code{"custom2"}.}
 
 \item{address}{A plain text address (e.g. \code{"Dam Square, Amsterdam"}).
 Geocoded automatically — no coordinates needed.}
 
 \item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
-Google Sheets. Used automatically by \code{StartCyclingOnline()}.}
+Google Sheets. Used automatically by \code{StartCycling()}.}
 }
 \value{
 The saved coordinates as a named list with \code{lat} and
   \code{lon}.
 }
 \description{
-Save a location for a user
-}
-\details{
-Geocodes the address and writes the result to the BikeWise Google
-  Sheet, or to a local CSV when \code{example = TRUE}. If a location with
-  the same label already exists for this user, it is overwritten. The
-  Google Sheets backend requires \code{BIKEWISE_SHEET_ID} to be set and a
-  valid Google account authenticated via \code{googlesheets4::gs4_auth()}.
+Geocodes the address via Nominatim and writes the coordinates to the user
+store. If a location with the same label already exists for this user, it
+is overwritten.
 }
 \examples{
 \dontrun{
+# save to local CSV — no authentication needed
+save_location("alice", "home", "Keizersgracht 1, Amsterdam", example = TRUE)
+
+# save to Google Sheets
 googlesheets4::gs4_auth()
 save_location("alice", "home", "Keizersgracht 1, Amsterdam")
 }

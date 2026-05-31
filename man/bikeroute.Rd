@@ -11,22 +11,23 @@ bikeroute(from_lat, from_lon, to_lat, to_lon, speed_kmh = 15)
 
 \item{from_lon}{Longitude of your starting point (e.g. \code{4.8922}).}
 
-\item{to_lat}{Latitude of your destination.}
+\item{to_lat}{Latitude of your destination (e.g. \code{52.3579}).}
 
-\item{to_lon}{Longitude of your destination.}
+\item{to_lon}{Longitude of your destination (e.g. \code{4.8686}).}
 
 \item{speed_kmh}{Assumed cycling speed in km/h used to estimate travel time
 (default: 15).}
 }
 \value{
-A named list with three elements: \code{timed_coords} (your
+A named list with three elements: \code{timed_coords} (the
   estimated position at each kilometre mark, as a data frame with columns
   \code{time_min}, \code{dist_km}, \code{lon}, and \code{lat}),
   \code{duration_min} (estimated cycling time in minutes), and
   \code{distance_km} (total route length in kilometres).
 }
 \description{
-Plan a cycling route between two coordinates
+Queries the OSRM cycling API for the route geometry, then computes travel
+time and timed waypoints using Haversine distance and a constant speed.
 }
 \details{
 Uses the public OSRM routing API with the cycling profile to find
@@ -37,6 +38,8 @@ Uses the public OSRM routing API with the cycling profile to find
   assuming constant speed and interpolating between waypoints.
 }
 \examples{
+\donttest{
 bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
+}
 
 }
