@@ -4,41 +4,38 @@
 \alias{save_location}
 \title{Save a location for a user}
 \usage{
-save_location(user, label, address, display_name = NULL)
+save_location(user, label, address, example = FALSE)
 }
 \arguments{
-\item{user}{A username string identifying the user.}
+\item{user}{A character string identifying the user account.}
 
-\item{label}{The name of the location. One of the preset labels
-(\code{"home"}, \code{"work"}, etc.) or \code{"custom1"} /
-\code{"custom2"} for user-defined locations.}
+\item{label}{The name of the location. One of \code{"home"},
+\code{"work"}, \code{"education"}, \code{"friends"}, \code{"sports"},
+\code{"music"}, \code{"custom1"}, or \code{"custom2"}.}
 
 \item{address}{A plain text address (e.g. \code{"Dam Square, Amsterdam"}).
 Geocoded automatically — no coordinates needed.}
 
-\item{display_name}{Optional display name for the location card. Only used
-when \code{label} is \code{"custom1"} or \code{"custom2"}.}
+\item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
+Google Sheets. Used automatically by \code{StartCycling()}.}
 }
 \value{
 The saved coordinates as a named list with \code{lat} and
   \code{lon}.
 }
 \description{
-Save a location for a user
-}
-\details{
-Geocodes the address and writes the result to the BikeWise Google
-  Sheet. If a location with the same label already exists for this user, it
-  is overwritten. Requires the environment variable
-  \code{BIKEWISE_SHEET_ID} to be set and a valid Google account
-  authenticated via \code{googlesheets4::gs4_auth()}.
+Geocodes the address via Nominatim and writes the coordinates to the user
+store. If a location with the same label already exists for this user, it
+is overwritten.
 }
 \examples{
 \dontrun{
+# save to local CSV — no authentication needed
+save_location("alice", "home", "Keizersgracht 1, Amsterdam", example = TRUE)
+
+# save to Google Sheets
 googlesheets4::gs4_auth()
 save_location("alice", "home", "Keizersgracht 1, Amsterdam")
-save_location("alice", "custom1", "Science Park 904, Amsterdam",
-              display_name = "Work Lab")
 }
 
 }

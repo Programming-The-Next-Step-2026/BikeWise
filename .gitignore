@@ -1,5 +1,11 @@
+.DS_Store
+**/.DS_Store
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 .positai
+.claude
+*.json
+/doc/
+/Meta/

@@ -1,44 +1,40 @@
 #' Get saved locations for a user
 #'
-#' @param user A username string identifying the user.
-#' @param label Optional. If provided, returns only the coordinates for that
-#'   label as a named list with \code{lat} and \code{lon}. If omitted, returns
-#'   all saved locations as a data frame.
+#' Returns the saved location records for a user from the backend store.
+#' On the Google Sheets backend, all fields are decrypted before returning.
 #'
-#' @return When \code{label} is omitted: a data frame with columns
-#'   \code{user}, \code{label}, \code{address}, \code{lat}, \code{lon}, and
-#'   \code{display_name}. When \code{label} is provided: a named list with
-#'   \code{lat} and \code{lon}, ready to pass directly into
-#'   \code{bikeroute()}.
+#' @param user A character string identifying the user account.
+#' @param example If \code{TRUE}, reads from a local CSV file instead of
+#'   Google Sheets. Used automatically by \code{StartCycling()}.
+#'
+#' @return A data frame with columns \code{user}, \code{label},
+#'   \code{address}, \code{lat}, and \code{lon}.
 #'
 #' @examples
 #' \dontrun{
-#' googlesheets4::gs4_auth()
-#' get_locations("alice")
-#' home <- get_locations("alice", "home")
-#' bikeroute(home$lat, home$lon, work$lat, work$lon)
+#' # returns all saved locations for the user
+#' get_locations("alice", example = TRUE)
 #' }
 #'
 #' @importFrom googlesheets4 read_sheet
 #' @export
-get_locations <- function(user, label = NULL) {
+get_locations <- function(user, example = FALSE) {
 
-  # read full locations sheet and filter to this user
-  data   <- read_sheet(sheet_id(), sheet = "locations")
-  result <- data[data$user == user, ]
-
-  # no label provided: return all locations as a data frame
-  if (is.null(label)) {
-    return(result)
+  if (example) {
+    locs <- load_local_locations()
+    return(locs[locs$user == user, ])
   }
 
-  # label provided: return just the coordinates for that location
-  match <- result[result$label == label, ]
-  if (nrow(match) == 0) {
-    stop(
-      "No saved location \"", label, "\" for user \"", user, "\". ",
-      "Add it first with save_location()."
-    )
-  }
-  list(lat = match$lat[1], lon = match$lon[1])
+  locs <- read_sheet(sheet_id(), sheet = "locations")
+  locs <- locs[locs$user == user, ]
+  locs$label   <- vapply(locs$label,   decrypt_value, character(1))
+  locs$address <- vapply(locs$address, decrypt_value, character(1))
+  # lat and lon come back as numeric when unencrypted — coerce before vapply
+  locs$lat <- as.numeric(vapply(
+    as.character(locs$lat), decrypt_value, character(1)
+  ))
+  locs$lon <- as.numeric(vapply(
+    as.character(locs$lon), decrypt_value, character(1)
+  ))
+  locs
 }

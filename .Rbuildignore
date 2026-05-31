@@ -1,4 +1,12 @@
+^.*\.DS_Store$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.positai$
 ^\.claude$
+^\.github$
+^deploy$
+^LICENSE\.md$
+^\.lintr$
+^.*\.json$
+^doc$
+^Meta$

@@ -1,110 +1,97 @@
 #' Plan a cycling route between two coordinates
 #'
+#' Queries the OSRM cycling API for the route geometry, then computes travel
+#' time and timed waypoints using Haversine distance and a constant speed.
+#'
 #' @param from_lat Latitude of your starting point (e.g. \code{52.3731}).
 #' @param from_lon Longitude of your starting point (e.g. \code{4.8922}).
-#' @param to_lat Latitude of your destination.
-#' @param to_lon Longitude of your destination.
+#' @param to_lat Latitude of your destination (e.g. \code{52.3579}).
+#' @param to_lon Longitude of your destination (e.g. \code{4.8686}).
+#' @param speed_kmh Assumed cycling speed in km/h used to estimate travel time
+#'   (default: 15).
 #'
-#' @return A named list with four elements: \code{coordinates} (every waypoint
-#'   on the route as a data frame with columns \code{lon} and \code{lat}),
-#'   \code{timed_coords} (your estimated position at each time interval, as a
-#'   data frame with columns \code{time_min}, \code{dist_km}, \code{lon}, and
-#'   \code{lat}), \code{duration_min} (estimated cycling time in minutes), and
+#' @return A named list with three elements: \code{timed_coords} (the
+#'   estimated position at each kilometre mark, as a data frame with columns
+#'   \code{time_min}, \code{dist_km}, \code{lon}, and \code{lat}),
+#'   \code{duration_min} (estimated cycling time in minutes), and
 #'   \code{distance_km} (total route length in kilometres).
 #'
 #' @details Uses the public OSRM routing API with the cycling profile to find
 #'   the route. Coordinates should be standard decimal latitude and longitude
-#'   (e.g. \code{52.3731, 4.8922}). Estimated positions along the route are
-#'   calculated by assuming a constant cycling speed and interpolating between
-#'   waypoints using the Haversine formula.
+#'   (e.g. \code{52.3731, 4.8922}). Travel time is estimated from the
+#'   Haversine route distance divided by \code{speed_kmh}, independent of the
+#'   OSRM duration. Estimated positions along the route are calculated by
+#'   assuming constant speed and interpolating between waypoints.
 #'
 #' @examples
+#' \donttest{
 #' bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
+#' }
 #'
-#' @importFrom httr2 request req_url_query req_perform resp_body_json
+#' @importFrom httr2 request req_url_query req_timeout req_perform resp_body_json
 #' @importFrom stats approx
 #' @export
-bikeroute <- function(from_lat, from_lon, to_lat, to_lon) {
-  # needs to be small enough so raintracker can find a row near each km mark
-  # at ~15 km/h cycling speed, 2 min ~ 500m which is fine for 1km checkpoints
-  interval_min <- 2
+bikeroute <- function(from_lat, from_lon, to_lat, to_lon, speed_kmh = 15) {
+  # matches raintracker's check_interval_km — lookups land on exact rows
+  interval_km <- 1
 
   base_url <- "https://router.project-osrm.org/route/v1/bike"
-  coords   <- paste0(from_lon, ",", from_lat, ";", to_lon, ",", to_lat)
+  coord_str <- paste0(from_lon, ",", from_lat, ";", to_lon, ",", to_lat)
 
-  # HTTP request to OSRM API
-  resp <- request(paste0(base_url, "/", coords)) |>
+  resp <- request(paste0(base_url, "/", coord_str)) |>
     req_url_query(
       overview   = "full",
       geometries = "geojson",
       steps      = "false"
     ) |>
+    req_timeout(10) |>
     req_perform()
 
-  # Returns a JSON object that is then transformed into an R list object
   body <- resp |> resp_body_json()
 
-  # Returns an error if no route exists between two points
   if (body$code != "Ok") {
     stop("OSRM error: ", body$code)
   }
 
-  # Collect coordinates in df, cycling duration,and total distance
-  route        <- body$routes[[1]]
-  coords_list  <- route$geometry$coordinates
-  duration_min <- round(route$duration / 60, 1)
-  distance_km  <- round(route$distance / 1000, 2)
+  route       <- body$routes[[1]]
+  coords_list <- route$geometry$coordinates
 
   coords_df <- data.frame(
     lon = sapply(coords_list, `[[`, 1),
     lat = sapply(coords_list, `[[`, 2)
   )
 
+  # Haversine distance between each consecutive pair of waypoints
+  n    <- nrow(coords_df)
+  phi1 <- coords_df$lat[-n] * pi / 180
+  phi2 <- coords_df$lat[-1] * pi / 180
+  dphi <- phi2 - phi1
+  dlam <- (coords_df$lon[-1] - coords_df$lon[-n]) * pi / 180
+  a    <- sin(dphi / 2)^2 + cos(phi1) * cos(phi2) * sin(dlam / 2)^2
+  seg_km <- c(0, 2 * 6371 * asin(sqrt(a)))  # arc length, Earth radius = 6371 km
 
-  # Compute cumulative distance (km) along the route using Haversine.
-  # Determine seg_km[i]; the great-circle distance between waypoint i-1 and i.
-  n      <- nrow(coords_df)
-  seg_km <- numeric(n)
-
-  # skip i=1: no previous point to measure from
-  for (i in 2:n) {
-
-    # convert previous and current lat to radians
-    phi1      <- coords_df$lat[i - 1] * pi / 180
-    phi2      <- coords_df$lat[i]     * pi / 180
-
-    # lat and lon differences in radians
-    dphi      <- phi2 - phi1
-    dlam      <- (coords_df$lon[i]   - coords_df$lon[i - 1]) * pi / 180
-
-    # Haversine intermediate value
-    a         <- sin(dphi / 2)^2 + cos(phi1) * cos(phi2) * sin(dlam / 2)^2
-
-    # arc length in km, Earth radius = 6371 km
-    seg_km[i] <- 2 * 6371 * asin(sqrt(a))
-  }
-
-  # cumsum() turns per-segment distances into a running total from the start.
   cum_km <- cumsum(seg_km)
 
+  # both derived from Haversine — keeps duration and distance consistent
+  distance_km  <- round(cum_km[n], 2)
+  duration_min <- round(cum_km[n] / speed_kmh * 60, 1)
 
-  # Build sequence of timestamps, forcing the final timestamp to be included
-  timestamps <- unique(c(seq(0, duration_min, by = interval_min), duration_min))
+  # build km marks along the route, forcing the final point to be included
+  dist_marks <- unique(c(seq(0, cum_km[n], by = interval_km), cum_km[n]))
 
-  # Convert timestamps to distances along the route (constant speed)
-  dist_at_t <- timestamps * (cum_km[n] / duration_min)
+  # derive time at each distance mark (constant speed assumption)
+  time_at_d <- dist_marks / cum_km[n] * duration_min
 
-  # Linearly interpolate lon and lat at each target distance using approx()
+  # deduplicate cum_km first — OSRM can return consecutive identical waypoints
+  keep <- !duplicated(cum_km)
   timed_df <- data.frame(
-    time_min = timestamps,
-    dist_km  = dist_at_t,
-    lon      = approx(cum_km, coords_df$lon, xout = dist_at_t)$y,
-    lat      = approx(cum_km, coords_df$lat, xout = dist_at_t)$y
+    time_min = time_at_d,
+    dist_km  = dist_marks,
+    lon      = approx(cum_km[keep], coords_df$lon[keep], xout = dist_marks)$y,
+    lat      = approx(cum_km[keep], coords_df$lat[keep], xout = dist_marks)$y
   )
 
-  # Save coordinates, timed positions, duration and distance in list
   list(
-    coordinates  = coords_df,
     timed_coords = timed_df,
     duration_min = duration_min,
     distance_km  = distance_km

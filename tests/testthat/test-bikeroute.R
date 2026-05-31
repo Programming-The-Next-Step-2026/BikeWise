@@ -2,81 +2,50 @@
 # Fetches a real route once to avoid repeated API calls across all tests.
 # All tests are skipped if OSRM is unreachable.
 
-# Fetch route once
 route <- tryCatch(bikeroute(52.3731, 4.8922, 52.3579, 4.8686),
                   error = function(e) NULL)
 
-# Test return structure
 test_that("bikeroute returns a named list with correct elements", {
   skip_if(is.null(route), "OSRM API unavailable")
   expect_type(route, "list")
-  expect_named(route,
-               c("coordinates", "timed_coords", "duration_min", "distance_km"))
+  expect_named(route, c("timed_coords", "duration_min", "distance_km"))
 })
 
-# Test coordinates data frame
-test_that("coordinates is a data frame with lon and lat columns", {
-  skip_if(is.null(route), "OSRM API unavailable")
-  expect_s3_class(route$coordinates, "data.frame")
-  expect_named(route$coordinates, c("lon", "lat"))
-  expect_gt(nrow(route$coordinates), 1)
-})
-
-# Test coordinates fall within valid WGS84 bounds
-test_that("coordinates fall within valid WGS84 bounds", {
-  skip_if(is.null(route), "OSRM API unavailable")
-  expect_true(all(route$coordinates$lat >= -90  & route$coordinates$lat <= 90))
-  expect_true(all(route$coordinates$lon >= -180 & route$coordinates$lon <= 180))
-})
-
-# Test duration and distance are positive
 test_that("duration and distance are positive numbers", {
   skip_if(is.null(route), "OSRM API unavailable")
   expect_gt(route$duration_min, 0)
   expect_gt(route$distance_km, 0)
 })
 
-# Test Haversine distance aligns with OSRM distance
-test_that("Haversine total distance is within 1% of OSRM distance", {
-  skip_if(is.null(route), "OSRM API unavailable")
-  coords       <- route$coordinates
-  n            <- nrow(coords)
-  lat_rad      <- coords$lat * pi / 180
-  lon_rad      <- coords$lon * pi / 180
-  phi1         <- lat_rad[-n]
-  phi2         <- lat_rad[-1]
-  dphi         <- phi2 - phi1
-  dlam         <- lon_rad[-1] - lon_rad[-n]
-  a            <- sin(dphi / 2)^2 + cos(phi1) * cos(phi2) * sin(dlam / 2)^2
-  haversine_km <- sum(c(0, 2 * 6371 * asin(sqrt(a))))
-  expect_lt(abs(haversine_km - route$distance_km) / route$distance_km, 0.01)
-})
-
-# Test timed_coords structure and column names
 test_that("timed_coords has correct columns", {
   skip_if(is.null(route), "OSRM API unavailable")
   expect_s3_class(route$timed_coords, "data.frame")
   expect_named(route$timed_coords, c("time_min", "dist_km", "lon", "lat"))
 })
 
-# Test timed_coords starts at 0 and ends at duration_min
-test_that("timed_coords always starts at 0 and ends at duration_min", {
+test_that("timed_coords starts at 0 and ends at full distance and duration", {
   skip_if(is.null(route), "OSRM API unavailable")
+  dists <- route$timed_coords$dist_km
   times <- route$timed_coords$time_min
+  expect_equal(dists[1], 0)
   expect_equal(times[1], 0)
+  expect_equal(dists[length(dists)], route$distance_km, tolerance = 0.01)
   expect_equal(times[length(times)], route$duration_min)
 })
 
-# Test that the internal interval is 2 minutes (hardcoded for raintracker resolution)
-test_that("timed_coords timestamps are spaced at the hardcoded 2-minute interval", {
+test_that("timed_coords distance marks are spaced at 1 km intervals", {
   skip_if(is.null(route), "OSRM API unavailable")
-  times <- route$timed_coords$time_min
-  # exclude the final gap, which may be shorter if duration is not a multiple of 2
-  diffs <- diff(times[-length(times)])
-  expect_true(all(abs(diffs - 2) < 0.001))
+  dists <- route$timed_coords$dist_km
+  # exclude the final gap — last mark is the exact route end, not a km boundary
+  diffs <- diff(dists[-length(dists)])
+  expect_true(all(abs(diffs - 1) < 0.001))
 })
 
-# Test error for unroutable coordinates
+test_that("duration_min is consistent with distance_km at default speed", {
+  skip_if(is.null(route), "OSRM API unavailable")
+  expect_equal(route$duration_min, round(route$distance_km / 15 * 60, 1))
+})
+
 test_that("coordinates with no bikeable route produce an error", {
   skip_on_cran()
   # 0,0 is in the ocean with no road network

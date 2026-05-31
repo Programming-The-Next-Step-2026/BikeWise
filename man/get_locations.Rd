@@ -4,31 +4,26 @@
 \alias{get_locations}
 \title{Get saved locations for a user}
 \usage{
-get_locations(user, label = NULL)
+get_locations(user, example = FALSE)
 }
 \arguments{
-\item{user}{A username string identifying the user.}
+\item{user}{A character string identifying the user account.}
 
-\item{label}{Optional. If provided, returns only the coordinates for that
-label as a named list with \code{lat} and \code{lon}. If omitted, returns
-all saved locations as a data frame.}
+\item{example}{If \code{TRUE}, reads from a local CSV file instead of
+Google Sheets. Used automatically by \code{StartCycling()}.}
 }
 \value{
-When \code{label} is omitted: a data frame with columns
-  \code{user}, \code{label}, \code{address}, \code{lat}, \code{lon}, and
-  \code{display_name}. When \code{label} is provided: a named list with
-  \code{lat} and \code{lon}, ready to pass directly into
-  \code{bikeroute()}.
+A data frame with columns \code{user}, \code{label},
+  \code{address}, \code{lat}, and \code{lon}.
 }
 \description{
-Get saved locations for a user
+Returns the saved location records for a user from the backend store.
+On the Google Sheets backend, all fields are decrypted before returning.
 }
 \examples{
 \dontrun{
-googlesheets4::gs4_auth()
-get_locations("alice")
-home <- get_locations("alice", "home")
-bikeroute(home$lat, home$lon, work$lat, work$lon)
+# returns all saved locations for the user
+get_locations("alice", example = TRUE)
 }
 
 }

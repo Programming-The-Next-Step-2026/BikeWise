@@ -1,30 +1,21 @@
-# Convert a street address to lat/lon using the Nominatim API
-#' @importFrom httr2 request req_url_query req_headers req_perform
+#' Convert a street address to lat/lon using the Nominatim API.
+#' @importFrom httr2 request req_url_query req_headers req_timeout req_perform
 #' @importFrom httr2 resp_body_json
 #' @noRd
 geocode <- function(address) {
 
-  # create query
-  resp <- request("https://nominatim.openstreetmap.org/search") |>
-    
-    # needed info, including address input
+  results <- request("https://nominatim.openstreetmap.org/search") |>
     req_url_query(q = address, format = "json", limit = 1) |>
-    
-    # needed user, as otherwise blocked request
+    # Nominatim blocks requests without a User-Agent header
     req_headers(`User-Agent` = "BikeWise R package") |>
-    req_perform()
+    req_timeout(10) |>
+    req_perform() |>
+    resp_body_json()
 
-  # return JSON response as list
-  results <- resp |> resp_body_json()
-
-  # give warning if address not found
   if (length(results) == 0) {
-    stop(
-      "Address not found: \"", address, "\". "
-    )
+    stop("Address not found: \"", address, "\"")
   }
 
-  # return latitude and longitude as list
   list(
     lat = as.numeric(results[[1]]$lat),
     lon = as.numeric(results[[1]]$lon)
@@ -33,63 +24,79 @@ geocode <- function(address) {
 
 #' Save a location for a user
 #'
-#' @param user A username string identifying the user.
-#' @param label The name of the location. One of the preset labels
-#'   (\code{"home"}, \code{"work"}, etc.) or \code{"custom1"} /
-#'   \code{"custom2"} for user-defined locations.
+#' Geocodes the address via Nominatim and writes the coordinates to the user
+#' store. If a location with the same label already exists for this user, it
+#' is overwritten.
+#'
+#' @param user A character string identifying the user account.
+#' @param label The name of the location. One of \code{"home"},
+#'   \code{"work"}, \code{"education"}, \code{"friends"}, \code{"sports"},
+#'   \code{"music"}, \code{"custom1"}, or \code{"custom2"}.
 #' @param address A plain text address (e.g. \code{"Dam Square, Amsterdam"}).
 #'   Geocoded automatically — no coordinates needed.
-#' @param display_name Optional display name for the location card. Only used
-#'   when \code{label} is \code{"custom1"} or \code{"custom2"}.
+#' @param example If \code{TRUE}, reads and writes a local CSV file instead of
+#'   Google Sheets. Used automatically by \code{StartCycling()}.
 #'
 #' @return The saved coordinates as a named list with \code{lat} and
 #'   \code{lon}.
 #'
-#' @details Geocodes the address and writes the result to the BikeWise Google
-#'   Sheet. If a location with the same label already exists for this user, it
-#'   is overwritten. Requires the environment variable
-#'   \code{BIKEWISE_SHEET_ID} to be set and a valid Google account
-#'   authenticated via \code{googlesheets4::gs4_auth()}.
-#'
 #' @examples
 #' \dontrun{
+#' # save to local CSV — no authentication needed
+#' save_location("alice", "home", "Keizersgracht 1, Amsterdam", example = TRUE)
+#'
+#' # save to Google Sheets
 #' googlesheets4::gs4_auth()
 #' save_location("alice", "home", "Keizersgracht 1, Amsterdam")
-#' save_location("alice", "custom1", "Science Park 904, Amsterdam",
-#'               display_name = "Work Lab")
 #' }
 #'
 #' @importFrom googlesheets4 read_sheet write_sheet
 #' @export
-save_location <- function(user, label, address, display_name = NULL) {
+save_location <- function(user, label, address, example = FALSE) {
 
-  # get coordinates using geocode function
-  coords <- geocode(address)
-
-  # use preset title if no display name provided; NULL for custom labels
-  if (is.null(display_name)) {
-    display_name <- PRESET_TITLES[[label]]
+  # fail early — invalid label creates an orphan entry the app cannot display
+  if (!label %in% names(preset_titles)) {
+    stop("label must be one of: ", paste(names(preset_titles), collapse = ", "))
   }
 
-  # from the sheet get the whole location column
-  existing <- read_sheet(sheet_id(), sheet = "locations")
+  coords <- geocode(address)
 
-  # don't select the row with the user and the provided label (if existent)
-  existing <- existing[!(existing$user == user & existing$label == label), ]
-
-  # create a new row based on the input
+  # same structure for both backends
   new_row <- data.frame(
-    user         = user,
-    label        = label,
-    address      = address,
-    lat          = coords$lat,
-    lon          = coords$lon,
-    display_name = display_name
+    user    = user,
+    label   = label,
+    address = address,
+    lat     = coords$lat,
+    lon     = coords$lon
   )
 
-  # rewrite sheet with new row included
-  write_sheet(rbind(existing, new_row), ss = sheet_id(), sheet = "locations")
+  if (example) {
 
-  # return coordinates
-  return(coords)
+    existing <- load_local_locations()
+    existing <- existing[!(existing$user == user & existing$label == label), ]
+    write.csv(rbind(existing, new_row), local_locations_path(),
+              row.names = FALSE)
+
+  } else {
+
+    # decrypt stored labels — needed to find the existing row to replace
+    existing <- read_sheet(sheet_id(), sheet = "locations")
+    existing_labels <- vapply(
+      as.character(existing$label), decrypt_value, character(1)
+    )
+    existing <- existing[!(existing$user == user & existing_labels == label), ]
+    # label and address are personal data — encrypted at rest
+    new_row_enc <- data.frame(
+      user    = user,
+      label   = encrypt_value(label),
+      address = encrypt_value(address),
+      lat     = encrypt_value(coords$lat),
+      lon     = encrypt_value(coords$lon)
+    )
+    write_sheet(rbind(existing, new_row_enc),
+                ss = sheet_id(), sheet = "locations")
+
+  }
+
+  coords
 }

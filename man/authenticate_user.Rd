@@ -4,12 +4,15 @@
 \alias{authenticate_user}
 \title{Log in or register a user}
 \usage{
-authenticate_user(username, password)
+authenticate_user(username, password, example = FALSE)
 }
 \arguments{
-\item{username}{A username string.}
+\item{username}{A character string identifying the user account.}
 
-\item{password}{A plain-text password.}
+\item{password}{A plain-text password string.}
+
+\item{example}{If \code{TRUE}, reads and writes a local CSV file instead of
+Google Sheets. Used automatically by \code{StartCycling()}.}
 }
 \value{
 One of three character strings: \code{"created"} (new account made),
@@ -17,7 +20,19 @@ One of three character strings: \code{"created"} (new account made),
   \code{"wrong_password"} (existing user, wrong password).
 }
 \description{
-Checks whether the username exists. If not, creates a new account. If so,
-verifies the password. Returns a string describing the outcome so the caller
-can respond appropriately.
+Checks whether the username exists in the user store. If not, creates a
+new account. If so, verifies the password against the stored hash.
+}
+\examples{
+\dontrun{
+# First call with a new username creates the account
+authenticate_user("alice", "secret", example = TRUE)  # "created"
+
+# Same credentials on a second call authenticate the user
+authenticate_user("alice", "secret", example = TRUE)  # "authenticated"
+
+# Wrong password returns "wrong_password"
+authenticate_user("alice", "badpass", example = TRUE) # "wrong_password"
+}
+
 }

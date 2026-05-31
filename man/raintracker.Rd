@@ -4,13 +4,7 @@
 \alias{raintracker}
 \title{Check whether it is safe to cycle now, or suggest when to leave}
 \usage{
-raintracker(
-  timed_df,
-  start_time,
-  check_interval_km = 1,
-  threshold = "moderate",
-  end_buffer_min = 5
-)
+raintracker(timed_df, start_time, threshold = "moderate")
 }
 \arguments{
 \item{timed_df}{Timed position data for your route, as returned in the
@@ -19,46 +13,39 @@ raintracker(
 \item{start_time}{When you plan to leave. Either a POSIXct datetime or a
 character string (e.g. \code{"2026-05-16 08:00"}).}
 
-\item{check_interval_km}{How far apart (in km) to check the weather along
-the route. Smaller values are more thorough but use more API calls.
-Defaults to 1 km.}
-
 \item{threshold}{How much rain is too much to cycle in. One of
-\code{"light"}, \code{"moderate"}, or \code{"heavy"}. Defaults to
-\code{"moderate"}.}
-
-\item{end_buffer_min}{Rain in the final minutes of a ride triggers a note
-rather than delaying your departure — this sets how many of those final
-minutes count as near the end. Defaults to 5.}
+\code{"none"}, \code{"light"}, \code{"moderate"}, or \code{"heavy"}.
+Defaults to \code{"moderate"}.}
 }
 \value{
-A named list with four elements: \code{safe_to_go} (TRUE if the
+A named list with three elements: \code{safe_to_go} (TRUE if the
   route looks rain-free at the suggested departure time),
   \code{suggested_departure} (when to leave as a POSIXct, or NA if no dry
-  window was found today), \code{end_of_route_note} (a plain-text warning
-  if heavy rain is expected near the finish, otherwise NULL), and
-  \code{route_rain_summary} (a data frame of rain readings at each
-  checkpoint — only included when \code{safe_to_go} is TRUE and at least
-  some rain was detected below the threshold). A \code{note} field is added
-  when the result is approximate.
+  window was found today), and \code{route_rain_summary} (a data frame with
+  columns \code{time_min}, \code{dist_km}, \code{lon}, \code{lat},
+  \code{rain_mm_h}, and \code{rain_level} — one row per checkpoint, showing
+  conditions at \code{suggested_departure} when safe, or at
+  \code{start_time} when no dry window was found).
 }
 \description{
-Check whether it is safe to cycle now, or suggest when to leave
+Checks weather at regular intervals along the route and finds the earliest
+rain-free departure window within the next 24 hours.
 }
 \details{
 Checks the weather at regular intervals along your route using the
   free Open-Meteo API (no key required), which provides 15-minute
-  precipitation forecasts over a 24-hour window. If rain is too heavy
-  somewhere along the route, the function works out when the rain clears at
-  that spot and shifts the suggested departure time forward accordingly,
-  repeating until the full route is clear. If no dry window is found within
-  24 hours, \code{suggested_departure} is returned as \code{NA}.
-
-  Because the forecast resolution is 15 minutes, suggested departure times
-  are rounded to the nearest 15 minutes.
+  precipitation forecasts over a 24-hour window. Rain severity is classified
+  using approximate Buienradar thresholds (none < 0.1, light < 2.5,
+  moderate \eqn{\leq} 10, heavy > 10 mm/h), chosen because they are
+  familiar to Dutch cyclists. If rain is too heavy somewhere along the
+  route, the function shifts the suggested departure forward until the full
+  route is clear. If no dry window is found within 24 hours,
+  \code{suggested_departure} is returned as \code{NA}.
 }
 \examples{
+\donttest{
 route <- bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
 raintracker(route$timed_coords, start_time = Sys.time())
+}
 
 }
