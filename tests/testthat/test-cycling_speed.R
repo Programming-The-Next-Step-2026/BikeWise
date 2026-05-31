@@ -134,25 +134,6 @@ test_that("cycling_speed setter returns NULL invisibly (example)", {
   expect_null(result)
 })
 
-# ── Migration ─────────────────────────────────────────────────────────────────
-
-test_that("load_local_users adds cycling_speed column to old CSVs", {
-  tmp <- withr::local_tempdir()
-  local_mocked_bindings(
-    R_user_dir = function(...) tmp,
-    .package = "BikeWise"
-  )
-  old_users <- data.frame(
-    username       = "alice",
-    password_hash  = "somehash",
-    rain_tolerance = "moderate"
-  )
-  write.csv(old_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
-  result <- load_local_users()
-  expect_true("cycling_speed" %in% names(result))
-  expect_true(is.na(result$cycling_speed[result$username == "alice"]))
-})
-
 # ── Encryption (Google Sheets backend) ───────────────────────────────────────
 
 test_that("cycling_speed getter decrypts and returns numeric from sheet", {

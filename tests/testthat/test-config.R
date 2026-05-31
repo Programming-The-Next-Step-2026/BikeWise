@@ -1,6 +1,7 @@
-# Tests for encrypt_value(), decrypt_value(), and sheet_id() in config.R.
-# withr::local_envvar() sets a temporary key for each test so the real
-# environment is never modified.
+# Tests for config.R: encryption helpers, sheet_id, and local CSV storage.
+# withr::local_envvar() sets temporary env vars so the real environment is
+# never modified. withr::local_tempdir() is used for CSV tests so nothing
+# is written to the real user data folder.
 
 # ── No-op when key is not set ─────────────────────────────────────────────────
 
@@ -81,33 +82,109 @@ test_that("sheet_id stops when BIKEWISE_SHEET_ID is not set", {
   expect_error(sheet_id(), "BIKEWISE_SHEET_ID is not set")
 })
 
-# ── load_local_users migrations ───────────────────────────────────────────────
+# ── Local storage — path helpers ──────────────────────────────────────────────
 
-test_that("load_local_users renames rain_preference to rain_tolerance", {
+test_that("local_users_path returns a path ending in example_users.csv", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
-  old <- data.frame(
-    username        = "alice",
-    password_hash   = "abc",
-    rain_preference = "moderate",
-    cycling_speed   = NA_real_
-  )
-  write.csv(old, file.path(tmp, "example_users.csv"), row.names = FALSE)
-  users <- load_local_users()
-  expect_true("rain_tolerance" %in% names(users))
-  expect_false("rain_preference" %in% names(users))
+  expect_true(endsWith(local_users_path(), "example_users.csv"))
 })
 
-test_that("load_local_users adds cycling_speed when column is missing", {
+test_that("local_locations_path ends with example_locations.csv", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
-  old <- data.frame(
+  expect_true(endsWith(local_locations_path(), "example_locations.csv"))
+})
+
+test_that("local_store_dir creates the folder if it does not exist yet", {
+  tmp    <- withr::local_tempdir()
+  target <- file.path(tmp, "new_subdir")
+  local_mocked_bindings(
+    R_user_dir = function(...) target,
+    .package = "BikeWise"
+  )
+  expect_false(dir.exists(target))
+  local_store_dir()
+  expect_true(dir.exists(target))
+})
+
+# ── Local storage — first-call initialisation ─────────────────────────────────
+
+test_that("load_local_users returns correct columns on first call", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  result <- load_local_users()
+  expect_s3_class(result, "data.frame")
+  expect_named(result, c("username", "password_hash", "rain_tolerance",
+                         "cycling_speed"))
+})
+
+test_that("load_local_users creates the CSV file on first call", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  load_local_users()
+  expect_true(file.exists(file.path(tmp, "example_users.csv")))
+})
+
+test_that("load_local_locations returns correct columns on first call", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  result <- load_local_locations()
+  expect_s3_class(result, "data.frame")
+  expect_named(result, c("user", "label", "address", "lat", "lon"))
+})
+
+test_that("load_local_locations creates the CSV file on first call", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  load_local_locations()
+  expect_true(file.exists(file.path(tmp, "example_locations.csv")))
+})
+
+# ── Local storage — migrations ────────────────────────────────────────────────
+
+test_that("load_local_users migrates rain_preference to rain_tolerance", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  old_users <- data.frame(
+    username        = "alice",
+    password_hash   = "somehash",
+    rain_preference = "moderate"
+  )
+  write.csv(old_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
+  result <- load_local_users()
+  expect_true("rain_tolerance" %in% names(result))
+  expect_false("rain_preference" %in% names(result))
+  expect_equal(result$rain_tolerance[result$username == "alice"], "moderate")
+})
+
+test_that("load_local_users adds cycling_speed column when missing", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  old_users <- data.frame(
     username       = "alice",
-    password_hash  = "abc",
+    password_hash  = "somehash",
     rain_tolerance = "moderate"
   )
-  write.csv(old, file.path(tmp, "example_users.csv"), row.names = FALSE)
-  users <- load_local_users()
-  expect_true("cycling_speed" %in% names(users))
-  expect_true(is.na(users$cycling_speed))
+  write.csv(old_users, file.path(tmp, "example_users.csv"), row.names = FALSE)
+  result <- load_local_users()
+  expect_true("cycling_speed" %in% names(result))
+  expect_true(is.na(result$cycling_speed[result$username == "alice"]))
+})
+
+test_that("load_local_locations drops display_name column from old installs", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(R_user_dir = function(...) tmp, .package = "BikeWise")
+  old_locs <- data.frame(
+    user         = "alice",
+    label        = "home",
+    address      = "Addr A",
+    lat          = 52.30,
+    lon          = 4.80,
+    display_name = "Home"
+  )
+  write.csv(old_locs, file.path(tmp, "example_locations.csv"),
+            row.names = FALSE)
+  result <- load_local_locations()
+  expect_false("display_name" %in% names(result))
 })
