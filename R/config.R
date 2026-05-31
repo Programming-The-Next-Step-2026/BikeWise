@@ -24,7 +24,7 @@ rain_thresholds <- c(none = 0.1, light = 2.5, moderate = 10)
 
 # ── Google Sheets backend ─────────────────────────────────────────────────────
 
-# Reads the Google Sheets ID from BIKEWISE_SHEET_ID; stops if unset.
+#' Reads the Google Sheets ID from BIKEWISE_SHEET_ID; stops if unset.
 #' @noRd
 sheet_id <- function() {
   id <- Sys.getenv("BIKEWISE_SHEET_ID")
@@ -34,8 +34,8 @@ sheet_id <- function() {
 
 # ── Encryption ────────────────────────────────────────────────────────────────
 
-# Encrypt a single value with AES-256-CBC using BIKEWISE_ENCRYPTION_KEY.
-# Returns the value unchanged when the env var is not set or the value is NA.
+#' Encrypt a single value with AES-256-CBC using BIKEWISE_ENCRYPTION_KEY.
+#' Returns the value unchanged when the env var is not set or the value is NA.
 #' @importFrom openssl sha256 rand_bytes aes_cbc_encrypt base64_encode
 #' @noRd
 encrypt_value <- function(x) {
@@ -48,8 +48,8 @@ encrypt_value <- function(x) {
   base64_encode(c(iv, ct))
 }
 
-# Decrypt a value that was encrypted by encrypt_value().
-# Returns the value unchanged when the env var is not set or the value is NA.
+#' Decrypt a value that was encrypted by encrypt_value().
+#' Returns the value unchanged when the env var is not set or the value is NA.
 #' @importFrom openssl sha256 aes_cbc_decrypt base64_decode
 #' @noRd
 decrypt_value <- function(x) {
@@ -63,7 +63,7 @@ decrypt_value <- function(x) {
 
 # ── Local storage ─────────────────────────────────────────────────────────────
 
-# Return (and create if needed) the folder where the local CSVs are stored
+#' Return (and create if needed) the folder where the local CSVs are stored.
 #' @importFrom tools R_user_dir
 #' @noRd
 local_store_dir <- function() {
@@ -82,8 +82,9 @@ local_locations_path <- function() {
   file.path(local_store_dir(), "example_locations.csv")
 }
 
-# Read the users CSV; create an empty one if it does not exist yet.
-# Migrates old column names for existing installs.
+#' Read the users CSV; create an empty one if it does not exist yet.
+#' Migrates old column names for existing installs.
+#' @importFrom utils read.csv write.csv
 #' @noRd
 load_local_users <- function() {
   path <- local_users_path()
@@ -110,8 +111,8 @@ load_local_users <- function() {
   users
 }
 
-# Read the locations CSV; create an empty one if it does not exist yet.
-# Migrates old column names for existing installs.
+#' Read the locations CSV; create an empty one if it does not exist yet.
+#' Migrates old column names for existing installs.
 #' @noRd
 load_local_locations <- function() {
   path <- local_locations_path()

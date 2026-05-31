@@ -5,3 +5,5 @@
 ^\.github$
 ^deploy$
 ^LICENSE\.md$
+^\.lintr$
+^.*\.json$

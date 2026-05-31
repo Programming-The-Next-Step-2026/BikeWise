@@ -1,4 +1,4 @@
-# convert a street address to lat/lon using the Nominatim API
+#' Convert a street address to lat/lon using the Nominatim API.
 #' @importFrom httr2 request req_url_query req_headers req_perform
 #' @importFrom httr2 resp_body_json
 #' @noRd

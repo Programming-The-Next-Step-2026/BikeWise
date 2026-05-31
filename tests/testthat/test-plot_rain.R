@@ -41,6 +41,8 @@ test_that("plot_rain adds a threshold line for light tolerance", {
 
 test_that("plot_rain sets the threshold line at the correct rain level", {
   p <- plot_rain(fake_summary, tolerance = "light")
-  hline <- Filter(function(l) class(l$geom)[1] == "GeomHline", p$layers)[[1]]
-  expect_equal(hline$aes_params$yintercept, rain_thresholds[["light"]])
+  built <- ggplot2::ggplot_build(p)
+  hline_idx <- which(sapply(p$layers, function(l) class(l$geom)[1]) == "GeomHline")
+  hline_data <- built$data[[hline_idx]]
+  expect_equal(hline_data$yintercept[1], rain_thresholds[["light"]])
 })

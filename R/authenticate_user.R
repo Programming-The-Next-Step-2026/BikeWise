@@ -29,7 +29,7 @@
 #' @export
 authenticate_user <- function(username, password, example = FALSE) {
 
-  # encrypt password — same regardless of backend
+  # hash password — same regardless of backend
   hash <- digest(password, algo = "sha256")
 
   users <- if (example) {

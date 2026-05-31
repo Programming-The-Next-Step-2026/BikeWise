@@ -3,7 +3,7 @@ library(shiny)
 library(BikeWise)
 
 # ── UI ────────────────────────────────────────────────────────────────────────
-# Single placeholder — server swaps screens by updating output$page.
+# Single placeholder — server swaps screens by updating output$page
 
 ui <- fluidPage(
   uiOutput("page")
@@ -54,7 +54,7 @@ pick_start_ui <- function(saved_labels) {
   btn_class <- function(key) {
     if (key %in% saved_labels) "btn-success" else "btn-default"
   }
-  # Use tagList as container — fluidRow breaks the layout here.
+  # Use tagList as container — fluidRow breaks the layout here
   tagList(
     fluidRow(column(12, align = "center",
       h2("BikeWise", icon("bicycle")))),
@@ -107,7 +107,7 @@ pick_end_ui <- function(saved_labels) {
   btn_class <- function(key) {
     if (key %in% saved_labels) "btn-success" else "btn-default"
   }
-  # Use tagList as container — fluidRow breaks the layout here.
+  # Use tagList as container — fluidRow breaks the layout here
   tagList(
     fluidRow(column(12, align = "center",
       h2("BikeWise", icon("bicycle")))),
@@ -172,7 +172,7 @@ route_ui <- function(route_data) {
       uiOutput("rain_advice")
     )),
     br(),
-    # Always rendered — server returns invisible(NULL) when no rain data.
+    # Always rendered — server returns invisible(NULL) when no rain data
     fluidRow(column(12, align = "center",
       plotOutput("rain_plot", height = "220px")
     )),
@@ -317,10 +317,10 @@ server <- function(input, output, session) {
   to_coords     <- reactiveVal(NULL)
   previous_page <- reactiveVal(NULL)
 
-  # Holds the location label clicked while a modal is open.
+  # Holds the location label clicked while a modal is open
   pending_label <- reactiveVal(NULL)
 
-  # Counters incremented to force reactives to re-run after settings updates.
+  # Counters incremented to force reactives to re-run after settings updates
   tolerance_version <- reactiveVal(0)
   speed_version     <- reactiveVal(0)
   settings_version  <- reactiveVal(0)

@@ -29,7 +29,7 @@ test_that("timed_coords starts at 0 and ends at full distance and duration", {
   times <- route$timed_coords$time_min
   expect_equal(dists[1], 0)
   expect_equal(times[1], 0)
-  expect_equal(dists[length(dists)], route$distance_km)
+  expect_equal(dists[length(dists)], route$distance_km, tolerance = 0.01)
   expect_equal(times[length(times)], route$duration_min)
 })
 

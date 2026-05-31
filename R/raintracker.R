@@ -1,4 +1,4 @@
-# Convert mm/h to named rain severity using Buienradar thresholds
+#' Convert mm/h to named rain severity using Buienradar thresholds.
 #' @noRd
 classify_rain <- function(mm_h) {
   if (mm_h < rain_thresholds[["none"]]) {
@@ -12,15 +12,15 @@ classify_rain <- function(mm_h) {
   }
 }
 
-# Check if rain severity exceeds the user's threshold
+#' Check if rain severity exceeds the user's threshold.
 #' @noRd
 exceeds_threshold <- function(level, threshold) {
   rain_order <- c(none = 0, light = 1, moderate = 2, heavy = 3)
   rain_order[[level]] > rain_order[[threshold]]
 }
 
-# Fetches a 24-hour, 15-minute precipitation forecast from Open-Meteo for a
-# single coordinate. Returns a data frame with columns time and mm_h.
+#' Fetches a 24-hour, 15-minute precipitation forecast from Open-Meteo for a
+#' single coordinate. Returns a data frame with columns time and mm_h.
 #' @importFrom httr2 request req_url_query req_perform resp_body_json
 #' @noRd
 fetch_rain_forecast <- function(lat, lon) {
