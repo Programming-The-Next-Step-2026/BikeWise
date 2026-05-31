@@ -2,7 +2,7 @@
 # Geocode section: live Nominatim calls, skipped if the API is unreachable.
 # save_location sections mock geocode() to avoid network calls; the Sheets
 # backend mocks sheet_id(), read_sheet(), and write_sheet(); the CSV backend
-# mocks R_user_dir() to an isolated tmpdir cleaned up after each test.
+# Mocks R_user_dir() to an isolated tmpdir cleaned up after each test.
 
 # ── geocode helper ────────────────────────────────────────────────────────────
 

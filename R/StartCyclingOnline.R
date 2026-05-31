@@ -23,8 +23,8 @@
 #' @export
 StartCyclingOnline <- function() {
 
-  # check required env vars are set
-  missing <- c(
+  # fail early — missing vars cause cryptic errors inside gs4_auth
+  missing_vars <- c(
     if (nchar(Sys.getenv("BIKEWISE_SHEET_ID")) == 0)
       "BIKEWISE_SHEET_ID",
     if (nchar(Sys.getenv("BIKEWISE_SERVICE_ACCOUNT")) == 0)
@@ -32,16 +32,16 @@ StartCyclingOnline <- function() {
     if (nchar(Sys.getenv("BIKEWISE_ENCRYPTION_KEY")) == 0)
       "BIKEWISE_ENCRYPTION_KEY"
   )
-  if (length(missing) > 0) {
+  if (length(missing_vars) > 0) {
     stop(
       "The following environment variables are not set: ",
-      paste(missing, collapse = ", "), ".\n",
+      paste(missing_vars, collapse = ", "), ".\n",
       "Add them to your .Renviron file and restart R.\n",
-      "See vignette(\"online-setup\", package = \"BikeWise\") for setup instructions."
+      "See vignette(\"online-setup\", package = \"BikeWise\") for ",
+      "setup instructions."
     )
   }
 
-  # authenticate with Google Sheets using service account
   gs4_auth(path = Sys.getenv("BIKEWISE_SERVICE_ACCOUNT"))
 
   runApp(system.file("apps/bikewise-online", package = "BikeWise"))

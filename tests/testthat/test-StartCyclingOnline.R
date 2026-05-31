@@ -32,3 +32,22 @@ test_that("StartCyclingOnline error message references the vignette", {
   )
   expect_error(StartCyclingOnline(), "online-setup")
 })
+
+test_that("StartCyclingOnline calls runApp with the bikewise-online app path", {
+  withr::local_envvar(
+    BIKEWISE_SHEET_ID        = "some-id",
+    BIKEWISE_SERVICE_ACCOUNT = "some-account",
+    BIKEWISE_ENCRYPTION_KEY  = "some-key"
+  )
+  called_with <- NULL
+  local_mocked_bindings(
+    gs4_auth = function(...) invisible(NULL),
+    runApp   = function(appDir, ...) {
+      called_with <<- appDir
+      invisible(NULL)
+    },
+    .package = "BikeWise"
+  )
+  StartCyclingOnline()
+  expect_match(called_with, "apps/bikewise-online")
+})
