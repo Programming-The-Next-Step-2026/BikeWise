@@ -14,7 +14,6 @@ fake_locations <- data.frame(
 
 # ── Google Sheets backend (example = FALSE) ───────────────────────────────────
 
-# Test that get_locations returns all of that user's rows as a data frame
 test_that("get_locations returns a data frame of all locations for a user", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
@@ -24,11 +23,11 @@ test_that("get_locations returns a data frame of all locations for a user", {
   )
   result <- get_locations("alice")
   expect_s3_class(result, "data.frame")
+  expect_named(result, c("user", "label", "address", "lat", "lon"))
   expect_equal(nrow(result), 2)
   expect_true(all(result$user == "alice"))
 })
 
-# Test that labels saved for one user are not visible to another
 test_that("get_locations only returns rows belonging to the requested user", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
@@ -41,9 +40,20 @@ test_that("get_locations only returns rows belonging to the requested user", {
   expect_true(all(result$user == "bob"))
 })
 
+test_that("get_locations returns an empty data frame for unknown user", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
+  local_mocked_bindings(
+    sheet_id   = function() "dummy",
+    read_sheet = function(...) fake_locations,
+    .package   = "BikeWise"
+  )
+  result <- get_locations("charlie")
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
+})
+
 # ── Local CSV backend (example = TRUE) ───────────────────────────────────────
 
-# Test that get_locations returns all of that user's rows as a data frame
 test_that("get_locations returns a data frame of all locations (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
@@ -58,7 +68,6 @@ test_that("get_locations returns a data frame of all locations (example)", {
   expect_true(all(result$user == "alice"))
 })
 
-# Test that labels saved for one user are not visible to another
 test_that("get_locations only returns rows for the requested user (example)", {
   tmp <- withr::local_tempdir()
   local_mocked_bindings(
@@ -72,9 +81,21 @@ test_that("get_locations only returns rows for the requested user (example)", {
   expect_true(all(result$user == "bob"))
 })
 
+test_that("get_locations returns empty data frame for unknown user (example)", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(
+    R_user_dir = function(...) tmp,
+    .package   = "BikeWise"
+  )
+  write.csv(fake_locations, file.path(tmp, "example_locations.csv"),
+            row.names = FALSE)
+  result <- get_locations("charlie", example = TRUE)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
+})
+
 # ── Encryption (Google Sheets backend) ───────────────────────────────────────
 
-# All coordinate fields are encrypted in the sheet — verify decryption
 test_that("get_locations decrypts all fields returned from the sheet", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
   encrypted_locs <- data.frame(
@@ -95,7 +116,6 @@ test_that("get_locations decrypts all fields returned from the sheet", {
   expect_equal(result$lon, 4.89)
 })
 
-# Multiple encrypted rows should all decrypt and return as a valid data frame
 test_that("get_locations returns decrypted data frame for all user rows", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
   encrypted_locs <- data.frame(
