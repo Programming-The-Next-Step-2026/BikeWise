@@ -14,6 +14,7 @@ fake_users <- data.frame(
 
 # Test that the getter returns whatever is stored in the sheet
 test_that("rain_tolerance returns stored tolerance without a value arg", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
     sheet_id   = function() "dummy",
     read_sheet = function(...) fake_users,
@@ -24,6 +25,7 @@ test_that("rain_tolerance returns stored tolerance without a value arg", {
 
 # Test that the setter writes the updated tolerance back to the sheet
 test_that("rain_tolerance updates the sheet when called with a new value", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   written <- NULL
   local_mocked_bindings(
     sheet_id    = function() "dummy",
@@ -40,6 +42,7 @@ test_that("rain_tolerance updates the sheet when called with a new value", {
 
 # Test that the setter returns NULL invisibly
 test_that("rain_tolerance returns NULL invisibly when setting a tolerance", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
     sheet_id    = function() "dummy",
     read_sheet  = function(...) fake_users,

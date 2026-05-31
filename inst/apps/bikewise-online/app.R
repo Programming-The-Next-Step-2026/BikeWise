@@ -1,5 +1,6 @@
+# library calls to prevent unit test failures
 library(shiny)
-
+library(BikeWise)
 
 # ── UI ────────────────────────────────────────────────────────────────────────
 # Single placeholder — server swaps screens by updating output$page.
@@ -179,7 +180,8 @@ route_ui <- function(route_data) {
     # Route stats
     splitLayout(
       div(align = "right", style = "padding-right: 30px;",
-          h3(icon("road"),  paste(round(route_data$distance_km, 1), "km"))),
+          h3(icon("road"),
+             paste(round(as.numeric(route_data$distance_km), 1), "km"))),
       div(align = "left",  style = "padding-left: 30px;",
           h3(icon("clock"), paste(route_data$duration_min, "min")))
     ),
@@ -458,16 +460,22 @@ server <- function(input, output, session) {
   # shared modal confirm — current_page() routes the result to the right screen
   observeEvent(input$confirm_address_btn, {
 
+    # message check distinguishes a geocoding failure from a backend error
     coords <- tryCatch(
       save_location(current_user(), pending_label(), input$new_address),
       error = function(e) {
-        showNotification("Address not found. Please try a different address.",
-                         type = "error", duration = 5)
+        showNotification(
+          if (grepl("Address not found", conditionMessage(e), fixed = TRUE))
+            "Address not found. Please try a different address."
+          else
+            "Could not save location. Please try again.",
+          type = "error", duration = 5
+        )
         NULL
       }
     )
 
-    # keep the modal open if geocoding failed
+    # keep the modal open if save failed
     if (is.null(coords)) return()
 
     removeModal()

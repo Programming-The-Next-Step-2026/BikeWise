@@ -15,6 +15,7 @@ fake_users <- data.frame(
 
 # Test that the getter returns whatever speed is stored in the sheet
 test_that("cycling_speed returns stored speed without a value arg", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
     sheet_id   = function() "dummy",
     read_sheet = function(...) fake_users,
@@ -25,6 +26,7 @@ test_that("cycling_speed returns stored speed without a value arg", {
 
 # Test that the getter returns NA for a user with no speed saved
 test_that("cycling_speed returns NA when no speed has been saved", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
     sheet_id   = function() "dummy",
     read_sheet = function(...) fake_users,
@@ -35,6 +37,7 @@ test_that("cycling_speed returns NA when no speed has been saved", {
 
 # Test that the setter writes the updated speed back to the sheet
 test_that("cycling_speed updates the sheet when called with a new value", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   written <- NULL
   local_mocked_bindings(
     sheet_id    = function() "dummy",
@@ -51,6 +54,7 @@ test_that("cycling_speed updates the sheet when called with a new value", {
 
 # Test that the setter only updates the right user's speed
 test_that("cycling_speed only updates the target user", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   written <- NULL
   local_mocked_bindings(
     sheet_id    = function() "dummy",
@@ -67,6 +71,7 @@ test_that("cycling_speed only updates the target user", {
 
 # Test that the setter returns NULL invisibly
 test_that("cycling_speed returns NULL invisibly when setting a speed", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
     sheet_id    = function() "dummy",
     read_sheet  = function(...) fake_users,

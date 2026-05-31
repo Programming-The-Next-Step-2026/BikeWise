@@ -39,8 +39,6 @@ geocode <- function(address) {
 #'   \code{"custom2"} for user-defined locations.
 #' @param address A plain text address (e.g. \code{"Dam Square, Amsterdam"}).
 #'   Geocoded automatically — no coordinates needed.
-#' @param display_name Optional display name for the location card. Only used
-#'   when \code{label} is \code{"custom1"} or \code{"custom2"}.
 #' @param example If \code{TRUE}, reads and writes a local CSV file instead of
 #'   Google Sheets. Used automatically by \code{StartCyclingOnline()}.
 #'
@@ -57,31 +55,22 @@ geocode <- function(address) {
 #' \dontrun{
 #' googlesheets4::gs4_auth()
 #' save_location("alice", "home", "Keizersgracht 1, Amsterdam")
-#' save_location("alice", "custom1", "Science Park 904, Amsterdam",
-#'               display_name = "Work Lab")
 #' }
 #'
 #' @importFrom googlesheets4 read_sheet write_sheet
 #' @export
-save_location <- function(user, label, address, display_name = NULL,
-                          example = FALSE) {
+save_location <- function(user, label, address, example = FALSE) {
 
   # geocode the address
   coords <- geocode(address)
 
-  # use preset title if no display name provided; NULL for custom labels
-  if (is.null(display_name)) {
-    display_name <- preset_titles[label]
-  }
-
   # build the new row — same structure for both backends
   new_row <- data.frame(
-    user         = user,
-    label        = label,
-    address      = address,
-    lat          = coords$lat,
-    lon          = coords$lon,
-    display_name = display_name
+    user    = user,
+    label   = label,
+    address = address,
+    lat     = coords$lat,
+    lon     = coords$lon
   )
 
   if (example) {
@@ -103,12 +92,11 @@ save_location <- function(user, label, address, display_name = NULL,
       !(existing$user == user & existing_labels == label), ]
     # encrypt sensitive fields before writing
     new_row_enc <- data.frame(
-      user         = user,
-      label        = encrypt_value(label),
-      address      = encrypt_value(address),
-      lat          = encrypt_value(coords$lat),
-      lon          = encrypt_value(coords$lon),
-      display_name = encrypt_value(as.character(display_name))
+      user    = user,
+      label   = encrypt_value(label),
+      address = encrypt_value(address),
+      lat     = encrypt_value(coords$lat),
+      lon     = encrypt_value(coords$lon)
     )
     write_sheet(rbind(existing, new_row_enc),
                 ss = sheet_id(), sheet = "locations")

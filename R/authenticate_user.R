@@ -1,8 +1,8 @@
 #' Log in or register a user
 #'
 #' Checks whether the username exists. If not, creates a new account. If so,
-#' verifies the password. Returns a string describing the outcome so the caller
-#' can respond appropriately.
+#' verifies the password. Returns a string describing the outcome to communicate
+#' with shiny or caller.
 #'
 #' @param username A username string.
 #' @param password A plain-text password.

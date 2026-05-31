@@ -12,18 +12,6 @@ preset_titles <- c(
   custom2   = "Custom 2"
 )
 
-#' @export
-preset_icons <- c(
-  home      = "home",
-  work      = "briefcase",
-  education = "graduation-cap",
-  friends   = "users",
-  sports    = "running",
-  music     = "music",
-  custom1   = "pencil",
-  custom2   = "pencil"
-)
-
 #' @noRd
 rain_thresholds <- c(none = 0.1, light = 2.5, moderate = 10)
 
@@ -113,20 +101,23 @@ load_local_users <- function() {
 }
 
 # Read the locations CSV; create an empty one if it does not exist yet.
+# Migrates old column names for existing installs.
 #' @noRd
 load_local_locations <- function() {
   path <- local_locations_path()
   if (!file.exists(path)) {
     empty <- data.frame(
-      user         = character(),
-      label        = character(),
-      address      = character(),
-      lat          = numeric(),
-      lon          = numeric(),
-      display_name = character()
+      user    = character(),
+      label   = character(),
+      address = character(),
+      lat     = numeric(),
+      lon     = numeric()
     )
     write.csv(empty, path, row.names = FALSE)
     return(empty)
   }
-  read.csv(path)
+  locs <- read.csv(path)
+  # drop display_name column for existing installs
+  if ("display_name" %in% names(locs)) locs$display_name <- NULL
+  locs
 }

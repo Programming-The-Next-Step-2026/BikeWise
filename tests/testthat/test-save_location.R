@@ -6,18 +6,18 @@
 
 # A fake locations table with one existing row for alice/home
 fake_locations <- data.frame(
-  user         = "alice",
-  label        = "home",
-  address      = "Old Street 1, Amsterdam",
-  lat          = 52.30,
-  lon          = 4.80,
-  display_name = "Home"
+  user    = "alice",
+  label   = "home",
+  address = "Old Street 1, Amsterdam",
+  lat     = 52.30,
+  lon     = 4.80
 )
 
 # ── Google Sheets backend (example = FALSE) ───────────────────────────────────
 
 # Test that save_location returns the geocoded coordinates
 test_that("save_location returns lat and lon", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   local_mocked_bindings(
     sheet_id    = function() "dummy",
     geocode     = function(address) list(lat = 52.37, lon = 4.89),
@@ -32,45 +32,9 @@ test_that("save_location returns lat and lon", {
   expect_equal(result$lon, 4.89)
 })
 
-# Test that preset labels get their display_name from PRESET_TITLES
-# automatically
-test_that("save_location sets display_name from PRESET_TITLES", {
-  written <- NULL
-  local_mocked_bindings(
-    sheet_id    = function() "dummy",
-    geocode     = function(address) list(lat = 52.37, lon = 4.89),
-    read_sheet  = function(...) fake_locations,
-    write_sheet = function(data, ...) {
-      written <<- data
-      invisible(NULL)
-    },
-    .package    = "BikeWise"
-  )
-  save_location("alice", "work", "Dam Square, Amsterdam")
-  new_row <- written[written$label == "work", ]
-  expect_equal(new_row$display_name, "Work")
-})
-
-# Test that a provided display_name overrides the preset for custom labels
-test_that("save_location uses the provided display_name when given", {
-  written <- NULL
-  local_mocked_bindings(
-    sheet_id    = function() "dummy",
-    geocode     = function(address) list(lat = 52.37, lon = 4.89),
-    read_sheet  = function(...) fake_locations,
-    write_sheet = function(data, ...) {
-      written <<- data
-      invisible(NULL)
-    },
-    .package    = "BikeWise"
-  )
-  save_location("alice", "custom1", "Science Park 904", display_name = "My Lab")
-  new_row <- written[written$label == "custom1", ]
-  expect_equal(new_row$display_name, "My Lab")
-})
-
 # Test that saving an existing label replaces the old row (no duplicate added)
 test_that("save_location replaces existing entry for same user/label", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   written <- NULL
   local_mocked_bindings(
     sheet_id    = function() "dummy",
@@ -88,6 +52,7 @@ test_that("save_location replaces existing entry for same user/label", {
 
 # Test that the coordinates written to the sheet match what geocode returned
 test_that("save_location writes geocoded coordinates to the sheet", {
+  withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "")
   written <- NULL
   local_mocked_bindings(
     sheet_id    = function() "dummy",
@@ -123,35 +88,6 @@ test_that("save_location returns lat and lon (example)", {
   expect_equal(result$lon, 4.89)
 })
 
-# Test that preset labels get their display_name from PRESET_TITLES
-test_that("save_location sets display_name from PRESET_TITLES (example)", {
-  tmp <- withr::local_tempdir()
-  local_mocked_bindings(
-    R_user_dir = function(...) tmp,
-    geocode    = function(address) list(lat = 52.37, lon = 4.89),
-    .package   = "BikeWise"
-  )
-  save_location("alice", "work", "Dam Square, Amsterdam", example = TRUE)
-  written <- read.csv(file.path(tmp, "example_locations.csv"))
-  new_row <- written[written$label == "work", ]
-  expect_equal(new_row$display_name, "Work")
-})
-
-# Test that a provided display_name is written to the CSV
-test_that("save_location uses the provided display_name when given (example)", {
-  tmp <- withr::local_tempdir()
-  local_mocked_bindings(
-    R_user_dir = function(...) tmp,
-    geocode    = function(address) list(lat = 52.37, lon = 4.89),
-    .package   = "BikeWise"
-  )
-  save_location("alice", "custom1", "Science Park 904",
-                display_name = "My Lab", example = TRUE)
-  written <- read.csv(file.path(tmp, "example_locations.csv"))
-  new_row <- written[written$label == "custom1", ]
-  expect_equal(new_row$display_name, "My Lab")
-})
-
 # Test that saving an existing label replaces the old row (no duplicate added)
 test_that("save_location replaces existing entry for same label (example)", {
   tmp <- withr::local_tempdir()
@@ -184,15 +120,18 @@ test_that("save_location writes geocoded coordinates to the CSV (example)", {
 
 # ── Encryption (Google Sheets backend) ───────────────────────────────────────
 
+# Sensitive fields must be unreadable in the sheet without the key
 test_that("save_location encrypts sensitive fields before writing to sheet", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
   written <- NULL
   local_mocked_bindings(
     sheet_id    = function() "dummy",
-    geocode     = function(address) list(lat = 52.37, lon = 4.89),
+    geocode     = function(address) {
+      list(lat = 52.37, lon = 4.89)
+    },
     read_sheet  = function(...) data.frame(
       user = character(), label = character(), address = character(),
-      lat = numeric(), lon = numeric(), display_name = character()
+      lat = numeric(), lon = numeric()
     ),
     write_sheet = function(data, ...) {
       written <<- data
@@ -207,15 +146,15 @@ test_that("save_location encrypts sensitive fields before writing to sheet", {
   expect_equal(as.numeric(decrypt_value(as.character(written$lat))), 52.37)
 })
 
+# Deduplication must work against the encrypted label column in the sheet
 test_that("save_location deduplicates correctly when labels are encrypted", {
   withr::local_envvar(BIKEWISE_ENCRYPTION_KEY = "test-key")
   encrypted_existing <- data.frame(
-    user         = "alice",
-    label        = encrypt_value("home"),
-    address      = encrypt_value("Old Street"),
-    lat          = encrypt_value(52.30),
-    lon          = encrypt_value(4.80),
-    display_name = encrypt_value("Home"),
+    user    = "alice",
+    label   = encrypt_value("home"),
+    address = encrypt_value("Old Street"),
+    lat     = encrypt_value(52.30),
+    lon     = encrypt_value(4.80),
     stringsAsFactors = FALSE
   )
   written <- NULL

@@ -105,8 +105,8 @@ The `threshold` parameter sets how much rain you're willing to cycle in:
 
 - `authenticate_user(username, password)` — log in or create an account
 - `save_location(user, label, address)` — geocode and save a location
-- `get_locations(user)` / `get_locations(user, label)` — retrieve saved locations
-- `rain_preference(username)` / `rain_preference(username, preference)` — get or set rain tolerance
+- `get_locations(user)` — retrieve saved locations as a data frame
+- `rain_tolerance(username)` / `rain_tolerance(username, tolerance)` — get or set rain tolerance
 
 ---
 

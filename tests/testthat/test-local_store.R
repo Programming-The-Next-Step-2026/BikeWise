@@ -74,8 +74,7 @@ test_that("load_local_locations returns correct columns on first call", {
   )
   result <- load_local_locations()
   expect_s3_class(result, "data.frame")
-  expect_named(result,
-               c("user", "label", "address", "lat", "lon", "display_name"))
+  expect_named(result, c("user", "label", "address", "lat", "lon"))
 })
 
 # Test that the CSV file is written to disk on the first call
@@ -110,4 +109,26 @@ test_that("load_local_users migrates rain_preference column to rain_tolerance",
   expect_true("rain_tolerance" %in% names(result))
   expect_false("rain_preference" %in% names(result))
   expect_equal(result$rain_tolerance[result$username == "alice"], "moderate")
+})
+
+# Test that load_local_locations drops the display_name column for existing
+# installs that pre-date its removal
+test_that("load_local_locations drops display_name column from old installs", {
+  tmp <- withr::local_tempdir()
+  local_mocked_bindings(
+    R_user_dir = function(...) tmp,
+    .package = "BikeWise"
+  )
+  old_locs <- data.frame(
+    user         = "alice",
+    label        = "home",
+    address      = "Addr A",
+    lat          = 52.30,
+    lon          = 4.80,
+    display_name = "Home"
+  )
+  write.csv(old_locs, file.path(tmp, "example_locations.csv"),
+            row.names = FALSE)
+  result <- load_local_locations()
+  expect_false("display_name" %in% names(result))
 })

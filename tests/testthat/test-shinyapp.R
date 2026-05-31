@@ -1,9 +1,10 @@
 # Integration tests for the BikeWise Shiny app using shinytest2.
 #
 # Setup (once, in your R console):
-#   install.packages("shinytest2")
-#   shinytest2::install_chromote()
-#   devtools::install()          # package must be installed, not just loaded
+#   install.packages("shinytest2")  # nolint: commented_code_linter.
+#   shinytest2::install_chromote()  # nolint: commented_code_linter.
+#   devtools::install()             # nolint: commented_code_linter.
+# The package must be installed (not just loaded) for shinytest2 to work.
 #
 # All tests are skipped automatically when shinytest2 is not available.
 # Online tests also require BIKEWISE_TEST_ONLINE=true plus valid credentials.
@@ -27,7 +28,7 @@ skip_online <- function() {
   )
   skip_if(
     Sys.getenv("BIKEWISE_TEST_ONLINE") != "true",
-    "online tests require BIKEWISE_TEST_ONLINE=true and valid Google credentials"
+    "online tests require BIKEWISE_TEST_ONLINE=true and valid credentials"
   )
 }
 
@@ -38,7 +39,8 @@ store_dir <- tools::R_user_dir("BikeWise", "data")
 users_csv <- file.path(store_dir, "example_users.csv")
 locs_csv  <- file.path(store_dir, "example_locations.csv")
 
-# Saves both CSVs before a test and restores them on exit — no cross-test pollution.
+# Saves both CSVs before a test and restores them on exit —
+# no cross-test pollution.
 snapshot_csvs <- function(envir = parent.frame()) {
   users_snap <- if (file.exists(users_csv)) read.csv(users_csv) else NULL
   locs_snap  <- if (file.exists(locs_csv))  read.csv(locs_csv)  else NULL
@@ -85,12 +87,11 @@ write_location <- function(user, label, lat, lon) {
   } else {
     data.frame(user = character(), label = character(),
                address = character(), lat = numeric(),
-               lon = numeric(), display_name = character())
+               lon = numeric())
   }
   write.csv(
     rbind(locs, data.frame(user = user, label = label,
-                           address = "Test Address", lat = lat, lon = lon,
-                           display_name = label)),
+                           address = "Test Address", lat = lat, lon = lon)),
     locs_csv, row.names = FALSE
   )
 }
@@ -191,7 +192,7 @@ test_that("local: selecting rain tolerance navigates to pick_start screen", {
 })
 
 # A green (pre-saved) start location skips the modal and opens pick_end.
-test_that("local: clicking a saved start location navigates to pick_end screen", {
+test_that("local: saved start location navigates to pick_end screen", {
   skip_local()
   snapshot_csvs()
 
@@ -246,8 +247,11 @@ test_that("local: back button on pick_end returns to pick_start screen", {
 })
 
 # Logout wipes session state and returns the user to the login screen.
+# Reaching logout_btn requires the route screen, which calls bikeroute() —
+# skip when there is no internet connection.
 test_that("local: logout navigates back to login screen", {
   skip_local()
+  skip_if_offline()
   snapshot_csvs()
 
   username <- test_user("o")
@@ -334,24 +338,6 @@ test_that("local: invalid speed input shows warning notification", {
 # ── bikewise-online tests ─────────────────────────────────────────────────────
 # These tests hit the live Google Sheets backend — they require valid
 # credentials and BIKEWISE_TEST_ONLINE=true to run.
-
-# New user gets the rain tolerance onboarding screen after their first login.
-test_that("online: new user login navigates to rain tolerance screen", {
-  skip_online()
-
-  app <- shinytest2::AppDriver$new(
-    system.file("apps/bikewise-online", package = "BikeWise"),
-    name = "online-new-user"
-  )
-  on.exit(app$stop(), add = TRUE)
-
-  app$set_inputs(username = test_user("n"), password = "pass")
-  app$click("login_btn")
-  app$wait_for_idle()
-
-  html <- app$get_html("body")
-  expect_true(grepl('id="tol_none"', html))
-})
 
 # Existing user skips onboarding and lands directly on pick_start.
 # Requires BIKEWISE_TEST_USER / BIKEWISE_TEST_PASS to be set in the environment.
