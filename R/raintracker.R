@@ -21,7 +21,7 @@ exceeds_threshold <- function(level, threshold) {
 
 #' Fetches a 24-hour, 15-minute precipitation forecast from Open-Meteo for a
 #' single coordinate. Returns a data frame with columns time and mm_h.
-#' @importFrom httr2 request req_url_query req_perform resp_body_json
+#' @importFrom httr2 request req_url_query req_timeout req_perform resp_body_json
 #' @noRd
 fetch_rain_forecast <- function(lat, lon) {
   resp <- request("https://api.open-meteo.com/v1/forecast") |>
@@ -32,6 +32,7 @@ fetch_rain_forecast <- function(lat, lon) {
       forecast_days = 1,
       timezone      = "Europe/Amsterdam"
     ) |>
+    req_timeout(10) |>
     req_perform()
 
   body  <- resp |> resp_body_json()

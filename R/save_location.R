@@ -1,5 +1,5 @@
 #' Convert a street address to lat/lon using the Nominatim API.
-#' @importFrom httr2 request req_url_query req_headers req_perform
+#' @importFrom httr2 request req_url_query req_headers req_timeout req_perform
 #' @importFrom httr2 resp_body_json
 #' @noRd
 geocode <- function(address) {
@@ -8,6 +8,7 @@ geocode <- function(address) {
     req_url_query(q = address, format = "json", limit = 1) |>
     # Nominatim blocks requests without a User-Agent header
     req_headers(`User-Agent` = "BikeWise R package") |>
+    req_timeout(10) |>
     req_perform() |>
     resp_body_json()
 

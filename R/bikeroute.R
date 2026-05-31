@@ -28,7 +28,7 @@
 #' bikeroute(52.3731, 4.8922, 52.3579, 4.8686)
 #' }
 #'
-#' @importFrom httr2 request req_url_query req_perform resp_body_json
+#' @importFrom httr2 request req_url_query req_timeout req_perform resp_body_json
 #' @importFrom stats approx
 #' @export
 bikeroute <- function(from_lat, from_lon, to_lat, to_lon, speed_kmh = 15) {
@@ -44,6 +44,7 @@ bikeroute <- function(from_lat, from_lon, to_lat, to_lon, speed_kmh = 15) {
       geometries = "geojson",
       steps      = "false"
     ) |>
+    req_timeout(10) |>
     req_perform()
 
   body <- resp |> resp_body_json()

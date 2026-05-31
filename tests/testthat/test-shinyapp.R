@@ -271,7 +271,7 @@ test_that("local: logout navigates back to login screen", {
   app$click("from_home")
   app$wait_for_idle()
   app$click("to_work")
-  app$wait_for_idle()
+  app$wait_for_idle(timeout = 30000)
 
   app$click("logout_btn")
   app$wait_for_idle()

@@ -1,3 +1,4 @@
+^.*\.DS_Store$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.positai$
@@ -7,3 +8,5 @@
 ^LICENSE\.md$
 ^\.lintr$
 ^.*\.json$
+^doc$
+^Meta$
