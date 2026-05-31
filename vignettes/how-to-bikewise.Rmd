@@ -133,165 +133,95 @@ to check another journey, or **Log out** to end the session.
 
 ## Flowchart
 
-```{r flowchart, echo = FALSE, fig.width = 9, fig.height = 14, out.width = "100%"}
+```{r flowchart, echo = FALSE, fig.width = 8, fig.height = 13, out.width = "100%"}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   DiagrammeR::grViz('
     digraph bikewise {
       rankdir = TB
-      graph [fontname = Helvetica, compound = true,
-             nodesep = 0.4, ranksep = 0.5, size = "8,14"]
-      node  [fontname = Helvetica, fontsize = 9, shape = box,
-             style = "rounded,filled", fillcolor = white, margin = "0.14,0.07"]
-      edge  [fontname = Helvetica, fontsize = 8]
+      graph [fontname = Helvetica, bgcolor = "#f5f7fa",
+             nodesep = 0.55, ranksep = 0.7]
 
-      // ─── USER ───────────────────────────────────────────────────
-      subgraph cluster_user {
-        label = "User"
-        style = filled; fillcolor = "#dce8fb"; color = steelblue
-        fontname = Helvetica; fontsize = 12; fontcolor = steelblue
+      // ── USER ACTIONS — blue rounded boxes
+      node [fontname = Helvetica, fontsize = 10, shape = box,
+            style = "rounded,filled", fillcolor = "#c8e6fc",
+            color = "#2375b3", fontcolor = "#14305c",
+            penwidth = 2.0, margin = "0.18,0.10"]
 
-        U1  [label = "Open app\nStartCycling()  or  web"]
-        U2  [label = "Enter username & password\nclick Sign in"]
-        U3  [label = "Choose rain tolerance\nnone  ·  light  ·  moderate  ·  heavy\n(first login only)"]
-        U4  [label = "Click start location\n(8 buttons: Home · Work · Education\nFriends · Sports · Music · Custom 1 · Custom 2)"]
-        U4b [label = "Type start address\nin pop-up"]
-        U5  [label = "Click end location\n(same 8 buttons — start excluded)"]
-        U5b [label = "Type end address\nin pop-up"]
-        U6  [label = "View result screen\nadvice  ·  rain chart  ·  distance  ·  time"]
-        U7a [label = "Tap New route"]
-        U7b [label = "Tap Log out"]
-      }
+      U1  [label = "Open app"]
+      U2  [label = "Enter username & password  ·  click Sign In"]
+      U3  [label = "Choose rain tolerance\n(first login only)"]
+      U4  [label = "Click start location"]
+      U4b [label = "Type start address"]
+      U5  [label = "Click end location"]
+      U5b [label = "Type end address"]
+      U6  [label = "View result screen"]
+      U7a [label = "Click  New Route"]
+      U7b [label = "Click  Log Out"]
 
-      // ─── SETTINGS (optional path) ────────────────────────────────
-      subgraph cluster_settings {
-        label = "Settings  ·  optional — reachable from start and end screens"
-        style = filled; fillcolor = "#fffbe6"; color = "#b8860b"
-        fontname = Helvetica; fontsize = 11
+      // ── SOFTWARE ACTIONS — coral filled boxes
+      node [shape = box, style = filled,
+            fillcolor = "#ffd5c2", color = "#bf4e30",
+            fontcolor = "#6b2015", penwidth = 2.0]
 
-        US0  [label = "Click  ⚙  Settings button"]
-        US1  [label = "Click a location button\nto edit that saved spot"]
-        US1b [label = "Type new address\nin pop-up"]
-        US2  [label = "Click rain tolerance button\n(none  ·  light  ·  moderate  ·  heavy)"]
-        US3  [label = "Enter cycling speed (1–100 km/h)\nclick Save speed"]
-        US4  [label = "Click Back\nreturns to previous screen"]
-      }
+      S1   [label = "authenticate_user()\nverify or create account"]
+      Serr [label = "display: wrong password",
+            shape = note, fillcolor = "#ffb3a7",
+            color = "#cc3333", fontcolor = "#800000"]
+      S2   [label = "rain_tolerance()\nsave preference"]
+      S3   [label = "get_locations()\nload saved spots"]
+      S4   [label = "save_location()  [start]\ngeocode via Nominatim  ·  save to backend"]
+      S4b  [label = "save_location()  [end]\ngeocode via Nominatim  ·  save to backend"]
+      S5   [label = "bikeroute()\nfetch cycling route via OSRM\ncalculate timed positions per km"]
+      S6   [label = "raintracker()\ncheck rain per checkpoint via Open-Meteo\nfind earliest dry departure window"]
+      S7   [label = "plot_rain()  +  advice message\nrender result screen"]
 
-      // ─── BIKEWISE ────────────────────────────────────────────────
-      subgraph cluster_bw {
-        label = "BikeWise"
-        style = filled; fillcolor = "#fce8e6"; color = tomato
-        fontname = Helvetica; fontsize = 12
-
-        S1   [label = "authenticate_user()\nSHA-256 hash password\ncheck or create account in backend"]
-        Serr [label = "Show error: wrong password\nstay on login screen",
-              shape = note, fillcolor = "#ffe0e0"]
-        S2   [label = "rain_tolerance()  set\nsave preference to backend"]
-        S3   [label = "get_locations()\nload saved spots from backend\ndecrypt fields if online mode"]
-        S4a  [label = "save_location()  — start\ngeocode via Nominatim\nwrite to backend  (encrypt if online)"]
-        S4b  [label = "save_location()  — end\ngeocode via Nominatim\nwrite to backend  (encrypt if online)"]
-        S5   [label = "bikeroute()\nOSRM API  →  GeoJSON route geometry\nHaversine distance per segment\ninterpolate position at each 1 km mark\nreturns: timed_coords · distance_km · duration_min"]
-        S6   [label = "raintracker()\nOpen-Meteo API per checkpoint  (up to 30)\nclassify rain intensity vs tolerance threshold\niterate departure time until full route is clear\nreturns: safe_to_go · suggested_departure · route_rain_summary"]
-        S7a  [label = "plot_rain()\nggplot2 area chart\nblue area = rain mm/h over distance\nred dashed line = tolerance threshold"]
-        S7b  [label = "render advice message\nGood to go!\nLeave at HH:MM for a dry ride.\nNo dry window today. Grab a raincoat.\nBuilt different. Just ride."]
-        S8   [label = "save_location()  — settings\ngeocode updated address via Nominatim\nwrite to backend"]
-        S9   [label = "rain_tolerance()  set\nsave to backend\ninvalidate rain_result reactive\nraintracker() re-runs"]
-        S10  [label = "cycling_speed()  set\nsave to backend\ninvalidate route_data reactive\nbikeroute() + raintracker() re-run"]
-      }
-
-      // ─── EXTERNAL APIs ───────────────────────────────────────────
-      subgraph cluster_api {
-        label = "External APIs"
-        style = filled; fillcolor = "#e8f8e8"; color = seagreen
-        fontname = Helvetica; fontsize = 12
-
-        A1 [label = "Nominatim / OpenStreetMap\ngeocode address  →  lat, lon"]
-        A2 [label = "OSRM Routing API\ncycling route  →  GeoJSON geometry"]
-        A3 [label = "Open-Meteo API\n15-min precipitation per checkpoint\nnext 24 hours in mm/h"]
-      }
-
-      // ═══ MAIN FLOW ═══════════════════════════════════════════════
+      // ── EDGES
+      edge [fontname = Helvetica, fontsize = 8.5, color = "#444444"]
 
       U1  -> U2
       U2  -> S1
+
       S1  -> Serr [label = " wrong password",
-                   color = "#cc4444", fontcolor = "#cc4444"]
+                   color = "#cc3333", fontcolor = "#cc3333"]
+      Serr -> U2  [label = " retry", style = dashed,
+                   color = "#cc3333", fontcolor = "#cc3333", constraint = false]
       S1  -> U3   [label = " new user"]
       S1  -> S3   [label = " returning user"]
+
       U3  -> S2
       S2  -> S3
       S3  -> U4
 
-      U4  -> U5   [label = " green  (saved address)"]
-      U4  -> U4b  [label = " grey  (new address)"]
-      U4b -> S4a
-      S4a -> A1   [label = " geocode request"]
-      S4a -> U5   [label = " address saved  →  pick end"]
+      U4  -> U5   [label = " saved address"]
+      U4  -> U4b  [label = " new address"]
+      U4b -> S4
+      S4  -> U5   [label = " saved  →  pick end"]
 
-      U5  -> S5   [label = " green  (different from start)"]
-      U5  -> U5b  [label = " grey  (new address)"]
-      U5  -> U4   [label = " back", constraint = false,
-                   style = dashed, color = "#888888", fontcolor = "#888888"]
+      U5  -> S5   [label = " saved address"]
+      U5  -> U5b  [label = " new address"]
+      U5  -> U4   [label = " Back", style = dashed,
+                   color = "#888888", fontcolor = "#888888", constraint = false]
       U5b -> S4b
-      S4b -> A1   [label = " geocode request"]
-      S4b -> S5   [label = " address saved  →  calculate"]
+      S4b -> S5   [label = " saved  →  calculate"]
 
-      S5  -> A2   [label = " route request"]
       S5  -> S6
-      S6  -> A3   [label = " forecast per checkpoint"]
-      S6  -> S7a
-      S6  -> S7b
-      S7a -> U6
-      S7b -> U6
+      S6  -> S7
+      S7  -> U6
 
       U6  -> U7a
       U6  -> U7b
-      U7a -> U4   [label = " clear route  →  pick start",
-                   constraint = false, style = dashed,
-                   color = "#888888", fontcolor = "#888888"]
-      U7b -> U1   [label = " clear session  →  login",
-                   constraint = false, style = dashed,
-                   color = "#888888", fontcolor = "#888888"]
-
-      // ═══ SETTINGS PATH ═══════════════════════════════════════════
-
-      U4  -> US0  [label = " ⚙"]
-      U5  -> US0  [label = " ⚙"]
-
-      US0 -> US1
-      US0 -> US2
-      US0 -> US3
-      US0 -> US4
-
-      US1  -> US1b
-      US1b -> S8
-      S8   -> A1  [label = " geocode request"]
-
-      US2  -> S9
-      US3  -> S10
-
-      S9  -> S6   [label = " tolerance changed  →  rain recalculates",
-                   constraint = false, style = dashed,
-                   color = "#b8860b", fontcolor = "#b8860b"]
-      S10 -> S5   [label = " speed changed  →  route recalculates",
-                   constraint = false, style = dashed,
-                   color = "#b8860b", fontcolor = "#b8860b"]
-
-      US4 -> U4   [label = " from pick-start", constraint = false,
-                   style = dashed, color = "#888888", fontcolor = "#888888"]
-      US4 -> U5   [label = " from pick-end", constraint = false,
-                   style = dashed, color = "#888888", fontcolor = "#888888"]
+      U7a -> U4   [label = " new route", style = dashed,
+                   color = "#666666", fontcolor = "#666666", constraint = false]
+      U7b -> U1   [label = " clear session", style = dashed,
+                   color = "#666666", fontcolor = "#666666", constraint = false]
     }
   ')
 }
 ```
 
-**Blue** — user actions. **Red** — BikeWise processing. **Yellow** — the optional
-Settings path, accessible from both location screens. **Green** — external API
-calls. Solid grey edges are the main flow; dashed grey edges are navigation
-loops and back-paths; dashed amber edges are reactive recalculations triggered
-by a settings change. In online mode (`StartCyclingOnline()`) all backend reads
-and writes go via Google Sheets using a service account; all personal data is
-AES-256 encrypted before it reaches the sheet.
+**Blue** — user actions (button clicks and text input). **Orange** — software
+actions (function calls and processing). Solid edges are the main flow; dashed
+edges are navigation loops, back-paths, and error retries.
 
 ---
 
